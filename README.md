@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Assets/RustDeskHop.png" alt="RustDeskHop rabbit icon" width="144" height="144">
+  <img src="Assets/RustDeskHop.svg" alt="RustDeskHop rabbit icon" width="144" height="144">
 </p>
 
 # RustDeskHop — RustDesk Network Companion
@@ -105,11 +105,11 @@ The executable is produced under `bin\Release\net9.0-windows\`.
 
 ### Application icon
 
-**Edit only `Assets/RustDeskHop.png`.** This is the single master for the approved bunny-inside-RustDesk-style mark **with its white background** and the README. Do not maintain separate source, title-bar, taskbar, tray or shortcut artwork.
+**Edit only `Assets/RustDeskHop.svg`.** This is the single vector master for the enlarged bunny overlapping RustDesk's original ring **with its white background** and the README. Do not maintain separate source, title-bar, taskbar, tray or shortcut artwork.
 
-Every Windows build automatically runs `tools/Build-ApplicationIcon.ps1` when the master changes. It trims the transparent exterior and fits the unchanged artwork into a PNG and a multi-resolution ICO without an added transparent margin. Aspect ratio and antialiased edges are preserved. Outputs go under the build's intermediate `branding` directory, are embedded in the executable and copied into release `Assets/`; generated files are not committed. The preview PNG is the same 256px frame contained in the ICO.
+Every Windows build automatically runs `tools/Build-ApplicationIcon.ps1` when the master changes. Its build-only .NET `BrandingRenderer` uses the pinned `Svg` package to rasterize the vector master, then creates the multi-resolution ICO without an added transparent margin. No Node, Python, RustDesk installation or online artwork download is needed to build; NuGet restores the renderer like other build dependencies. Aspect ratio and antialiased edges are preserved. Outputs go under the build's intermediate `branding` directory, are embedded in the executable and copied into release `Assets/`; generated files are not committed. The preview PNG is the same 256px frame contained in the ICO.
 
-The approved blue/cyan composite keeps its white background, including the negative space inside the mark; do not convert it into a transparent cutout. Transparent masters and the legacy white tile on black are also supported. Only that legacy connected exterior black matte is decoded. Replace the one PNG and rebuild; no other artwork file needs editing.
+The composite keeps its white background; do not convert it into a transparent cutout. Its ring path and gradient were copied from the actual installed RustDesk asset, `data/flutter_assets/assets/icon.svg` (source SHA-256 `4D6ECC2B45571382576049095435F41576C02E895B8766EF3F300623C35B3488`), with the exact path and arc endings retained under uniform scaling. The simplified bunny is about 30% larger than the previous design and sits in front with a white separation stroke. Ring provenance is recorded in the SVG and its path is regression-tested. Change that one SVG and rebuild; no other artwork file needs editing.
 
 For local deployment, `tools/Update-LocalBranding.ps1 -InstallDirectory <installed app folder>` refreshes only existing RustDeskHop shortcuts targeting that installation. Its cache-keyed icon copy is derived automatically from the generated ICO, never edited independently. RustDesk itself retains its own icon.
 

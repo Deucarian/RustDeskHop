@@ -15,7 +15,7 @@ if (Get-Process -Name RustDeskHop -ErrorAction SilentlyContinue | Where-Object P
     throw 'Choose Exit from this installation of RustDeskHop''s tray menu before updating. Do not close RustDesk or its sessions.'
 }
 if (Test-Path -LiteralPath $BackupDirectory) { throw 'Use a fresh backup directory; existing backups are never overwritten.' }
-$files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'LICENSE', 'README.md')
+$files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'Assets\RustDeskHop.svg', 'LICENSE', 'README.md')
 foreach ($file in $files) {
     if (-not (Test-Path -LiteralPath (Join-Path $publishPath $file) -PathType Leaf)) { throw "Incomplete publish: $file" }
 }

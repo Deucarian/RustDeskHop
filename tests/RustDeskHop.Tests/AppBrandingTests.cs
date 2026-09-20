@@ -1,6 +1,9 @@
 using System.Drawing;
 using System.Runtime.ExceptionServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Simultria.RustDeskCompanion;
 using Xunit;
 
@@ -8,6 +11,38 @@ namespace RustDeskHop.Tests;
 
 public sealed class AppBrandingTests
 {
+    [Fact]
+    public void MasterKeepsTheActualRustDeskRingPathAndUniformPlacement()
+    {
+        var master = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "BrandingMaster.svg"));
+        XNamespace svg = "http://www.w3.org/2000/svg";
+        var ring = master.Descendants(svg + "g").Single(element => (string?)element.Attribute("id") == "rustdesk-ring");
+        var path = Assert.Single(ring.Elements(svg + "path"));
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((string)path.Attribute("d")!)));
+        // Hash of the exact path copied from RustDesk's installed icon.svg.
+        // This protects the original curves, diagonal gaps and rounded endings.
+        Assert.Equal("B4E4D95796590029350D6F9E0A0EAE655E1F11DB09FCED6CCAFD64A9D98C8D37", hash);
+        Assert.Equal("translate(62 62) scale(34.61538461538461) translate(-66.993 -897.484)", (string?)ring.Attribute("transform"));
+        Assert.Equal("url(#b)", (string?)path.Attribute("fill"));
+        var gradient = master.Descendants(svg + "linearGradient").Single(element => (string?)element.Attribute("id") == "b");
+        Assert.Equal("matrix(26.00048 0 0 25.99935 66.993 897.485)", (string?)gradient.Attribute("gradientTransform"));
+    }
+
+    [Fact]
+    public void LargerForegroundBunnyUsesOneOutlineForBothColorAndWhiteSeparation()
+    {
+        var master = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "BrandingMaster.svg"));
+        XNamespace svg = "http://www.w3.org/2000/svg", xlink = "http://www.w3.org/1999/xlink";
+        var bunny = master.Descendants(svg + "g").Single(element => (string?)element.Attribute("id") == "foreground-bunny");
+        Assert.Equal("translate(512 540) scale(1.064) translate(-625 -605)", (string?)bunny.Attribute("transform"));
+        var layers = bunny.Elements(svg + "use").ToArray();
+        Assert.Equal(2, layers.Length);
+        Assert.All(layers, layer => Assert.Equal("#bunny", (string?)layer.Attribute(xlink + "href")));
+        Assert.Equal("#fff", (string?)layers[0].Attribute("stroke"));
+        Assert.Equal("40", (string?)layers[0].Attribute("stroke-width"));
+        Assert.Equal("url(#bunny-blue)", (string?)layers[1].Attribute("fill"));
+    }
+
     [Fact]
     public void IconResourceContainsAllWindowsSizes()
     {

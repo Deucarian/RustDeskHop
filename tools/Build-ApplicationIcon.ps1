@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$Source = (Join-Path $PSScriptRoot '..\Assets\RustDeskHop.png'),
-    [string]$Destination = (Join-Path $PSScriptRoot '..\obj\branding\RustDeskHop.ico'),
+    [string]$Source,
+    [string]$Destination,
     [string]$LogoDestination,
     [ValidateRange(0, 0.2)]
     [double]$PaddingFraction = 0,
@@ -10,11 +10,30 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $Source) { $Source = Join-Path $PSScriptRoot '..\Assets\RustDeskHop.svg' }
+if (-not $Destination) { $Destination = Join-Path $PSScriptRoot '..\obj\branding\RustDeskHop.ico' }
 Add-Type -AssemblyName System.Drawing
+
+if ([System.IO.Path]::GetExtension($Source) -ieq '.svg') {
+    $brandingDirectory = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetFullPath($Destination))
+    $renderedMaster = Join-Path $brandingDirectory 'master.png'
+    $rendererArtifacts = Join-Path $brandingDirectory 'renderer'
+    & dotnet run --project (Join-Path $PSScriptRoot 'BrandingRenderer\BrandingRenderer.csproj') --configuration Release --artifacts-path $rendererArtifacts -- $Source $renderedMaster
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to render the SVG icon master.' }
+    $Source = $renderedMaster
+}
 
 # One master image supplies all outputs. Never write back to that master.
 if (-not ('RustDeskHopIconBounds' -as [type])) {
-    $drawingAssemblies = @([System.Drawing.Bitmap].Assembly.Location, [System.Drawing.Rectangle].Assembly.Location) | Select-Object -Unique
+    $drawingAssemblies = @(
+        [System.Drawing.Bitmap].Assembly.Location
+        [System.Drawing.Rectangle].Assembly.Location
+        [System.Drawing.Bitmap].GetInterfaces() | ForEach-Object { $_.Assembly.Location }
+        # PowerShell 7/.NET splits drawing interfaces and collection references
+        # into assemblies that Windows PowerShell's compiler included by default.
+        $collectionsReference = Join-Path $PSHOME 'ref\System.Collections.dll'
+        if (Test-Path -LiteralPath $collectionsReference) { $collectionsReference }
+    ) | Select-Object -Unique
     Add-Type -ReferencedAssemblies $drawingAssemblies -TypeDefinition @'
 using System;
 using System.Drawing;
