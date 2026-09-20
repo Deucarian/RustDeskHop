@@ -28,9 +28,9 @@ public static class RustDeskHopIconBounds
         {
             var image = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
             using (var graphics = Graphics.FromImage(image)) graphics.DrawImageUnscaled(source, 0, 0);
-            // Accept either a transparent master or the approved white-tile
-            // preview on black. Only the connected exterior matte is decoded;
-            // the rabbit and the opaque tile interior are never recolored.
+            // Preserve the approved composite's white background, including its
+            // negative space. Transparent masters also pass through unchanged.
+            // Only the legacy white-tile preview's exterior black matte is decoded.
             foreach (var point in new[] { new Point(0, 0), new Point(image.Width - 1, 0),
                 new Point(0, image.Height - 1), new Point(image.Width - 1, image.Height - 1) })
             {
@@ -90,6 +90,7 @@ try {
     foreach ($size in $sizes) {
         $bitmap = [System.Drawing.Bitmap]::new($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
         $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        $attributes = [System.Drawing.Imaging.ImageAttributes]::new()
         $png = [System.IO.MemoryStream]::new()
         try {
             $graphics.Clear([System.Drawing.Color]::Transparent)
@@ -101,11 +102,20 @@ try {
             $width = $artBounds.Width * $scale
             $height = $artBounds.Height * $scale
             $target = [System.Drawing.RectangleF]::new(($size - $width) / 2, ($size - $height) / 2, $width, $height)
-            $graphics.DrawImage($sourceImage, $target, [System.Drawing.RectangleF]$artBounds, [System.Drawing.GraphicsUnit]::Pixel)
+            # Sample real edge pixels when downscaling an opaque master instead
+            # of introducing transparency around its white background.
+            $attributes.SetWrapMode([System.Drawing.Drawing2D.WrapMode]::TileFlipXY)
+            $targetPoints = [System.Drawing.PointF[]]@(
+                [System.Drawing.PointF]::new($target.Left, $target.Top),
+                [System.Drawing.PointF]::new($target.Right, $target.Top),
+                [System.Drawing.PointF]::new($target.Left, $target.Bottom)
+            )
+            $graphics.DrawImage($sourceImage, $targetPoints, [System.Drawing.RectangleF]$artBounds, [System.Drawing.GraphicsUnit]::Pixel, $attributes)
             $bitmap.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
             $frames.Add($png.ToArray())
         } finally {
             $png.Dispose()
+            $attributes.Dispose()
             $graphics.Dispose()
             $bitmap.Dispose()
         }

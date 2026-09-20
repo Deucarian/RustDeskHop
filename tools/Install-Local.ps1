@@ -12,7 +12,7 @@ if ([StringComparer]::OrdinalIgnoreCase.Equals($publishPath, $installPath)) { th
 $executable = Join-Path $installPath 'RustDeskHop.exe'
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) { throw 'This updater requires an existing RustDeskHop installation.' }
 if (Get-Process -Name RustDeskHop -ErrorAction SilentlyContinue | Where-Object Path -eq $executable) {
-    throw 'Close this installation of RustDeskHop before updating. Do not close RustDesk or its sessions.'
+    throw 'Choose Exit from this installation of RustDeskHop''s tray menu before updating. Do not close RustDesk or its sessions.'
 }
 if (Test-Path -LiteralPath $BackupDirectory) { throw 'Use a fresh backup directory; existing backups are never overwritten.' }
 $files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'LICENSE', 'README.md')

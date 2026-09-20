@@ -3,7 +3,8 @@
 ## Priority: refine UI sizing and match the approved design
 
 - [x] Remove the remaining added transparent icon margin so the unchanged master fills Windows taskbar frames more fully. Keep this follow-up on develop, separate from the desktop-polish promotion to main.
-- [ ] Review a RustDesk-logo/bunny composite concept before replacing the current master; keep this exploration develop-only and verify upstream logo-use terms before any public adoption.
+- [x] Apply the user-approved bunny-inside-RustDesk-style composite, retaining its white background, as the single icon master including tray and shortcut assets. Keep this follow-up develop-only.
+- [ ] Verify upstream logo-use terms before public distribution of the RustDesk-style composite; user approval of the design is not trademark clearance.
 - [x] Compare real RustDesk/RustDeskHop screenshots and replace the handmade title bar (text-symbol caption buttons and padded strip) with native Windows chrome, a matching light caption and compact window sizes. Screenshot-check the dashboard, maximize/restore and both editors at 100%; check native minimize/restore and the right-click system menu. Keep the window theme shared across every form.
 - [x] Rework visual hierarchy after the compact-sizing pass: one primary Connect action, one shared list/action frame, quiet maintenance controls, neutral network badges, consistent spacing tokens and matching framed dialogs.
 - [x] Adopt the approved blue-on-white icon with one editable master (`Assets/RustDeskHop.png`), automatically generated build assets and automatic local shortcut refresh during deployment.
@@ -15,7 +16,7 @@ User feedback recorded on 2026-09-17 and 2026-09-20. Compact sizing was followed
 
 ## Next milestone: tray-first UX
 
-- [ ] Add a system-tray mode so the companion can stay available without an open window.
+- [x] Add a system-tray mode: close/minimize hides, click/Open restores, Exit quits only the companion, and a second launch restores the existing instance.
 - [ ] Add a tray menu with saved clients grouped by network profile.
 - [ ] Add a polished network-switch confirmation popup.
 - [ ] Show the current RustDesk network and the target network clearly in the popup.

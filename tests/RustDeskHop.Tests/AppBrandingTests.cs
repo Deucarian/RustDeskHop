@@ -63,7 +63,7 @@ public sealed class AppBrandingTests
             Assert.True(bottom - top + 1 >= Math.Floor(frame.Size * .98), $"The {frame.Size}px frame has excessive vertical padding.");
             Assert.InRange(Math.Abs(left - (image.Width - 1 - right)), 0, 1);
             Assert.InRange(Math.Abs(top - (image.Height - 1 - bottom)), 0, 1);
-            Assert.Equal(0, image.GetPixel(0, 0).A);
+            AssertWhiteBackground(image.GetPixel(0, 0));
         }
     }
 
@@ -83,9 +83,10 @@ public sealed class AppBrandingTests
         using var png = new MemoryStream();
         logo.CopyTo(png);
         Assert.Equal(iconPng, png.ToArray());
-        // The approved inverse has a light tile, not the former blue tile.
-        var tile = AppBranding.Logo.GetPixel(128, 12);
-        Assert.True(tile.R > 230 && tile.G > 230 && tile.B > 230);
+        // The approved composite keeps its white background, not a cutout.
+        var mark = AppBranding.Logo.GetPixel(128, 32);
+        Assert.True(mark.A > 240 && mark.B > 180 && mark.R < 60);
+        AssertWhiteBackground(AppBranding.Logo.GetPixel(128, 64));
     }
 
     [Fact]
@@ -95,8 +96,8 @@ public sealed class AppBrandingTests
         var logo = AppBranding.Logo;
         Assert.Equal(logo.Width, logo.Height);
         Assert.True(logo.Width >= 256);
-        Assert.Equal(0, logo.GetPixel(0, 0).A);
-        Assert.Equal(0, logo.GetPixel(logo.Width - 1, logo.Height - 1).A);
+        AssertWhiteBackground(logo.GetPixel(0, 0));
+        AssertWhiteBackground(logo.GetPixel(logo.Width - 1, logo.Height - 1));
         Assert.True(logo.GetPixel(logo.Width / 2, logo.Height / 2).A > 0);
     }
 
@@ -124,6 +125,12 @@ public sealed class AppBrandingTests
             // Windows draws the shared icon in the real caption, not a second bitmap control.
             Assert.Empty(main.Controls.Find("TitleBarIcon", true));
         });
+    }
+
+    private static void AssertWhiteBackground(Color pixel)
+    {
+        Assert.Equal(255, pixel.A);
+        Assert.True(pixel.R >= 248 && pixel.G >= 248 && pixel.B >= 248);
     }
 
     private static void RunOnStaThread(Action action)
