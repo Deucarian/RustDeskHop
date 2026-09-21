@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Simultria.RustDeskCompanion;
 using Xunit;
 
@@ -10,18 +11,73 @@ namespace RustDeskHop.Tests;
 public sealed class AppBrandingTests
 {
     [Fact]
-    public void MasterIsTheUserSelectedEarlierThinRingArtworkWithPaddingRemoved()
+    public void SingleMasterEmbedsTheExactApprovedBunnyRatherThanRedrawingIt()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "BrandingMaster.png");
-        // Choice A: original artwork from bac0dbd, exterior matte decoded and
-        // cropped to (120,101,1014,1014). All 295,778 coloured pixels preserved.
+        var document = LoadMaster();
+        XNamespace svg = "http://www.w3.org/2000/svg";
+        XNamespace xlink = "http://www.w3.org/1999/xlink";
+        Assert.Equal("0 0 1014 1014", (string?)document.Root!.Attribute("viewBox"));
+        var image = Assert.Single(document.Descendants(svg + "image"));
+        Assert.Equal("approvedBunny", (string?)image.Attribute("id"));
+        Assert.Equal("url(#bunnyClip)", (string?)image.Attribute("clip-path"));
+        var uri = (string)image.Attribute(xlink + "href")!;
+        const string prefix = "data:image/png;base64,";
+        Assert.StartsWith(prefix, uri);
+        var originalBytes = Convert.FromBase64String(uri[prefix.Length..]);
+        // Exact choice-A source, embedded once. Its bunny clip excludes the old
+        // ring; the new ring is editable geometry, not another raster master.
         Assert.Equal("B4AAFD2C037A37C279283FDA94BA92511FE92CA29B2E68A47F99CB1C82DC1378",
-            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))));
-        using var master = new Bitmap(path);
+            Convert.ToHexString(SHA256.HashData(originalBytes)));
+        using var stream = new MemoryStream(originalBytes);
+        using var master = new Bitmap(stream);
         Assert.Equal(1014, master.Width);
         Assert.Equal(1014, master.Height);
         Assert.Equal(0, master.GetPixel(0, 0).A);
         AssertWhiteBackground(master.GetPixel(507, 0));
+    }
+
+    [Fact]
+    public void RingUsesOneHalfRotatedExactly180DegreesOnTheRustDeskDiagonal()
+    {
+        var document = LoadMaster();
+        XNamespace svg = "http://www.w3.org/2000/svg";
+        XNamespace xlink = "http://www.w3.org/1999/xlink";
+        var ring = document.Descendants(svg + "g").Single(e => (string?)e.Attribute("id") == "ring");
+        Assert.Equal("translate(532 505) rotate(-45)", (string?)ring.Attribute("transform"));
+        var halves = ring.Elements(svg + "use").ToArray();
+        Assert.Equal(2, halves.Length);
+        Assert.All(halves, half => Assert.Equal("#ringHalf", (string?)half.Attribute(xlink + "href")));
+        Assert.Null(halves[0].Attribute("transform"));
+        Assert.Equal("rotate(180)", (string?)halves[1].Attribute("transform"));
+        var shape = document.Descendants(svg + "path").Single(e => (string?)e.Attribute("id") == "ringHalf");
+        var path = (string)shape.Attribute("d")!;
+        Assert.Contains("A 414,414", path);
+        Assert.Contains("A 338,338", path); // 76 units, the approved thin band.
+    }
+
+    [Fact]
+    public void RenderedOpeningsAreClearOnBothEndsOfTheDiagonal()
+    {
+        var image = AppBranding.Logo;
+        foreach (var angle in new[] { -45.0, 135.0 })
+        foreach (var radius in new[] { 352.0, 376.0, 400.0 })
+        {
+            AssertWhiteBackground(SampleRing(image, angle, radius));
+            foreach (var side in new[] { -10.0, 10.0 })
+            {
+                var pixel = SampleRing(image, angle + side, radius);
+                Assert.True(pixel.B > 170 && pixel.R < 60, $"Missing ring at {angle + side} degrees / {radius} units.");
+            }
+        }
+    }
+
+    private static XDocument LoadMaster() => XDocument.Load(Path.Combine(AppContext.BaseDirectory, "BrandingMaster.svg"));
+
+    private static Color SampleRing(Bitmap image, double angle, double radius)
+    {
+        var radians = angle * Math.PI / 180;
+        return image.GetPixel((int)Math.Round((532 + Math.Cos(radians) * radius) * image.Width / 1014),
+            (int)Math.Round((505 + Math.Sin(radians) * radius) * image.Height / 1014));
     }
 
     [Fact]
@@ -99,10 +155,13 @@ public sealed class AppBrandingTests
             Assert.True(bottom - top + 1 >= Math.Floor(frame.Size * .98), $"The {frame.Size}px frame has excessive vertical padding.");
             Assert.InRange(Math.Abs(left - (image.Width - 1 - right)), 0, 1);
             Assert.InRange(Math.Abs(top - (image.Height - 1 - bottom)), 0, 1);
-            Assert.Equal(0, image.GetPixel(0, 0).A);
-            Assert.Equal(0, image.GetPixel(frame.Size - 1, 0).A);
-            Assert.Equal(0, image.GetPixel(0, frame.Size - 1).A);
-            Assert.Equal(0, image.GetPixel(frame.Size - 1, frame.Size - 1).A);
+            // The authentic tile radius has fractional corner coverage in the
+            // 16px frame. Preserve that antialiasing, not an opaque square.
+            var cornerCoverage = frame.Size == 16 ? 24 : 0;
+            Assert.InRange(image.GetPixel(0, 0).A, 0, cornerCoverage);
+            Assert.InRange(image.GetPixel(frame.Size - 1, 0).A, 0, cornerCoverage);
+            Assert.InRange(image.GetPixel(0, frame.Size - 1).A, 0, cornerCoverage);
+            Assert.InRange(image.GetPixel(frame.Size - 1, frame.Size - 1).A, 0, cornerCoverage);
             AssertWhiteBackground(image.GetPixel(frame.Size / 2, 0));
         }
     }
