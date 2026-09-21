@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
   <title>RustDeskHop</title>
-  <desc>A large hopping bunny in front of the original RustDesk ring, on white.</desc>
-  <!-- Single editable master. The ring path and gradient below are copied exactly
-       from RustDesk's installed data/flutter_assets/assets/icon.svg.
+  <desc>A large hopping bunny in front of an 18% slimmer RustDesk-derived ring, on white.</desc>
+  <!-- Single editable master. The ring originates from RustDesk's installed
+       data/flutter_assets/assets/icon.svg; the gradient and outer arcs remain unchanged.
        Source SHA256: 4D6ECC2B45571382576049095435F41576C02E895B8766EF3F300623C35B3488.
-       Only uniform placement surrounds the original coordinates; no regenerated arcs.
+       User-approved refinement: expand the inner contour to reduce band thickness
+       by about 18%, keeping the outside diameter and characteristic rounded ends.
        RustDesk's branding remains third-party artwork; see the README attribution. -->
   <defs>
     <linearGradient id="a" x1=".148" x2=".845" y1=".851" y2=".154" gradientTransform="matrix(26.301 0 0 26.331 90.674 911.757)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0071ff"/><stop offset="1" stop-color="#00bfe1"/></linearGradient>
@@ -18,7 +19,7 @@
   </defs>
   <rect id="white-background" width="1024" height="1024" fill="#fff"/>
   <g id="rustdesk-ring" transform="translate(62 62) scale(34.61538461538461) translate(-66.993 -897.484)">
-    <path fill="url(#b)" d="m89.318 903.552-2.135 2.122c-.376.337-.558.879-.347 1.337 1.422 2.976.882 6.524-1.452 8.856-2.335 2.331-5.887 2.87-8.866 1.449-.439-.197-.954-.03-1.292.312l-2.17 2.167a1.154 1.154 0 0 0 .208 1.81 13.005 13.005 0 0 0 15.91-1.912 12.97 12.97 0 0 0 1.956-15.887 1.154 1.154 0 0 0-1.812-.254zm-18.467-2.305a12.969 12.969 0 0 0-2.02 15.885 1.154 1.154 0 0 0 1.812.254l2.124-2.11c.385-.336.572-.884.359-1.348-1.423-2.976-.884-6.524 1.451-8.856 2.334-2.332 5.887-2.871 8.866-1.45.434.194.942.033 1.281-.3l2.182-2.18a1.152 1.152 0 0 0-.208-1.81 13.009 13.009 0 0 0-15.893 1.973z"/>
+    <path fill="url(#b)" d="M89.318 903.552 L87.984891 905.137547 C87.613535 905.481556 87.454946 906.061065 87.70013 906.572432 C89.301699 909.924239 88.693508 913.920278 86.064772 916.546762 C83.43491 919.172119 79.434365 919.779184 76.079179 918.178741 C75.588806 917.949975 75.03756 918.094499 74.690497 918.430525 L73.056 919.795 A1.154 1.154 0 0 0 73.264 921.605 A13.005 13.005 0 0 0 89.174 919.693 A12.97 12.97 0 0 0 91.13 903.806 A1.154 1.154 0 0 0 89.318 903.552 Z M70.851 901.247 A12.969 12.969 0 0 0 68.831 917.132 A1.154 1.154 0 0 0 70.643 917.386 L71.962952 915.809213 C72.343587 915.466573 72.507085 914.880597 72.258839 914.362906 C70.656144 911.011099 71.263208 907.015059 73.893071 904.388576 C76.521807 901.762092 80.523478 901.155028 83.878664 902.755471 C84.362599 902.982331 84.906877 902.843548 85.255764 902.516992 L86.906 901.142 A1.152 1.152 0 0 0 86.698 899.332 A13.009 13.009 0 0 0 70.805 901.305 Z"/>
   </g>
   <!-- 30% larger than the previous bunny relative to the canvas. A white
        under-stroke separates it from the ring without changing the ring path. -->

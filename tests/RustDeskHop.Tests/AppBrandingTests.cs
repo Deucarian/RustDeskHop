@@ -12,20 +12,51 @@ namespace RustDeskHop.Tests;
 public sealed class AppBrandingTests
 {
     [Fact]
-    public void MasterKeepsTheActualRustDeskRingPathAndUniformPlacement()
+    public void SlimmerRingKeepsItsApprovedContourAndOriginalOuterArcs()
     {
         var master = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "BrandingMaster.svg"));
         XNamespace svg = "http://www.w3.org/2000/svg";
         var ring = master.Descendants(svg + "g").Single(element => (string?)element.Attribute("id") == "rustdesk-ring");
         var path = Assert.Single(ring.Elements(svg + "path"));
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((string)path.Attribute("d")!)));
-        // Hash of the exact path copied from RustDesk's installed icon.svg.
-        // This protects the original curves, diagonal gaps and rounded endings.
-        Assert.Equal("B4E4D95796590029350D6F9E0A0EAE655E1F11DB09FCED6CCAFD64A9D98C8D37", hash);
+        // Intentional 18% inner-contour expansion; the original outer arcs and
+        // outside rounded endings remain unchanged (absolute SVG coordinates).
+        Assert.Equal("AEF6FABCC73078F4FEF09EB62748DF28F76B4933A62949D89B9AB1FD89AB826D", hash);
+        foreach (var arc in new[] {
+            "A1.154 1.154 0 0 0 73.264 921.605",
+            "A13.005 13.005 0 0 0 89.174 919.693",
+            "A12.97 12.97 0 0 0 91.13 903.806",
+            "A1.154 1.154 0 0 0 89.318 903.552",
+            "A12.969 12.969 0 0 0 68.831 917.132",
+            "A1.154 1.154 0 0 0 70.643 917.386",
+            "A1.152 1.152 0 0 0 86.698 899.332",
+            "A13.009 13.009 0 0 0 70.805 901.305" })
+            Assert.Contains(arc, (string)path.Attribute("d")!);
         Assert.Equal("translate(62 62) scale(34.61538461538461) translate(-66.993 -897.484)", (string?)ring.Attribute("transform"));
         Assert.Equal("url(#b)", (string?)path.Attribute("fill"));
         var gradient = master.Descendants(svg + "linearGradient").Single(element => (string?)element.Attribute("id") == "b");
         Assert.Equal("matrix(26.00048 0 0 25.99935 66.993 897.485)", (string?)gradient.Attribute("gradientTransform"));
+    }
+
+    [Fact]
+    public void RenderedTopBandIsFifteenToTwentyPercentThinnerWithoutShrinkingOutside()
+    {
+        var image = AppBranding.Logo;
+        var first = -1;
+        var last = -1;
+        for (var y = 0; y < 100; y++)
+        {
+            var pixel = image.GetPixel(128, y);
+            if (pixel.R < 60 && pixel.B > 160)
+            {
+                if (first < 0) first = y;
+                last = y;
+            }
+            else if (first >= 0) break;
+        }
+        Assert.Equal(16, first); // The previous icon's outside boundary.
+        // The previous 256px frame had a 46px solid band here; allow pixel rounding.
+        Assert.InRange(last - first + 1, 37, 39);
     }
 
     [Fact]
@@ -34,6 +65,9 @@ public sealed class AppBrandingTests
         var master = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "BrandingMaster.svg"));
         XNamespace svg = "http://www.w3.org/2000/svg", xlink = "http://www.w3.org/1999/xlink";
         var bunny = master.Descendants(svg + "g").Single(element => (string?)element.Attribute("id") == "foreground-bunny");
+        var outline = master.Descendants(svg + "path").Single(element => (string?)element.Attribute("id") == "bunny");
+        Assert.Equal("39FF2740DA6ADA7BF1DC87EF8D900777627C52BB5AA4010EF5A7906848C89F23",
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((string)outline.Attribute("d")!))));
         Assert.Equal("translate(512 540) scale(1.064) translate(-625 -605)", (string?)bunny.Attribute("transform"));
         var layers = bunny.Elements(svg + "use").ToArray();
         Assert.Equal(2, layers.Length);
