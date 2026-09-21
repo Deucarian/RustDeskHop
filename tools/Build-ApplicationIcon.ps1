@@ -10,18 +10,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-if (-not $Source) { $Source = Join-Path $PSScriptRoot '..\Assets\RustDeskHop.svg' }
+if (-not $Source) { $Source = Join-Path $PSScriptRoot '..\Assets\RustDeskHop.png' }
 if (-not $Destination) { $Destination = Join-Path $PSScriptRoot '..\obj\branding\RustDeskHop.ico' }
 Add-Type -AssemblyName System.Drawing
-
-if ([System.IO.Path]::GetExtension($Source) -ieq '.svg') {
-    $brandingDirectory = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetFullPath($Destination))
-    $renderedMaster = Join-Path $brandingDirectory 'master.png'
-    $rendererArtifacts = Join-Path $brandingDirectory 'renderer'
-    & dotnet run --project (Join-Path $PSScriptRoot 'BrandingRenderer\BrandingRenderer.csproj') --configuration Release --artifacts-path $rendererArtifacts -- $Source $renderedMaster
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to render the SVG icon master.' }
-    $Source = $renderedMaster
-}
 
 # One master image supplies all outputs. Never write back to that master.
 if (-not ('RustDeskHopIconBounds' -as [type])) {
