@@ -2,6 +2,7 @@
 
 ## Priority: refine UI sizing and match the approved design
 
+- [x] Match RustDesk's rounded white Windows icon tile and overall mark padding, checked against the installed executable's 48px icon. Preserve the approved thinner ring and bunny, and regenerate every size from the one SVG master.
 - [x] Make the ring about 18% thinner by opening its inner contour, retaining the outside diameter, original outer arcs/rounded endings and unchanged foreground bunny. Verify the generated band thickness and refresh the installed app.
 - [x] Remove the remaining added transparent icon margin so the unchanged master fills Windows taskbar frames more fully. Keep this follow-up on develop, separate from the desktop-polish promotion to main.
 - [x] Apply the user-approved bunny-inside-RustDesk-style composite, retaining its white background, as the single icon master including tray and shortcut assets. Keep this follow-up develop-only.

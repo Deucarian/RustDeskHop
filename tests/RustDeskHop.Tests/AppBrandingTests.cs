@@ -39,7 +39,25 @@ public sealed class AppBrandingTests
     }
 
     [Fact]
-    public void RenderedTopBandIsFifteenToTwentyPercentThinnerWithoutShrinkingOutside()
+    public void MasterMatchesRustDeskTileAndInsetsTheWholeMarkUniformly()
+    {
+        var master = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "BrandingMaster.svg"));
+        XNamespace svg = "http://www.w3.org/2000/svg";
+        var tile = master.Descendants(svg + "rect").Single(element => (string?)element.Attribute("id") == "white-background");
+        Assert.Equal("1024", (string?)tile.Attribute("width"));
+        Assert.Equal("1024", (string?)tile.Attribute("height"));
+        Assert.Equal("160", (string?)tile.Attribute("rx"));
+        Assert.Equal("160", (string?)tile.Attribute("ry"));
+        Assert.Equal("#fff", (string?)tile.Attribute("fill"));
+        var layout = master.Descendants(svg + "g").Single(element => (string?)element.Attribute("id") == "rustdesk-icon-layout");
+        // 832 / 900: match RustDesk's 96px mark inset without altering either outline.
+        Assert.Equal("translate(512 512) scale(0.9244444444444444) translate(-512 -512)", (string?)layout.Attribute("transform"));
+        Assert.Equal(new[] { "rustdesk-ring", "foreground-bunny" },
+            layout.Elements(svg + "g").Select(element => (string?)element.Attribute("id")));
+    }
+
+    [Fact]
+    public void RenderedTopBandRetainsApprovedThinnessAtRustDeskMarkSize()
     {
         var image = AppBranding.Logo;
         var first = -1;
@@ -54,9 +72,9 @@ public sealed class AppBrandingTests
             }
             else if (first >= 0) break;
         }
-        Assert.Equal(16, first); // The previous icon's outside boundary.
-        // The previous 256px frame had a 46px solid band here; allow pixel rounding.
-        Assert.InRange(last - first + 1, 37, 39);
+        Assert.Equal(24, first); // RustDesk's 96px master inset at 256px.
+        // Original 46px band * 832/900 layout scale * 82% thickness, with rounding.
+        Assert.InRange(last - first + 1, 34, 36);
     }
 
     [Fact]
@@ -132,7 +150,28 @@ public sealed class AppBrandingTests
             Assert.True(bottom - top + 1 >= Math.Floor(frame.Size * .98), $"The {frame.Size}px frame has excessive vertical padding.");
             Assert.InRange(Math.Abs(left - (image.Width - 1 - right)), 0, 1);
             Assert.InRange(Math.Abs(top - (image.Height - 1 - bottom)), 0, 1);
-            AssertWhiteBackground(image.GetPixel(0, 0));
+            // At 16px the rounded edge partially covers the corner pixel.
+            var maxCornerAlpha = frame.Size == 16 ? 20 : 0;
+            Assert.InRange(image.GetPixel(0, 0).A, 0, maxCornerAlpha);
+            Assert.InRange(image.GetPixel(frame.Size - 1, 0).A, 0, maxCornerAlpha);
+            Assert.InRange(image.GetPixel(0, frame.Size - 1).A, 0, maxCornerAlpha);
+            Assert.InRange(image.GetPixel(frame.Size - 1, frame.Size - 1).A, 0, maxCornerAlpha);
+            AssertWhiteBackground(image.GetPixel(frame.Size / 2, 0));
+
+            if (frame.Size == 48)
+            {
+                // Visible (alpha >= 128) silhouette measured from the RT_GROUP_ICON
+                // resource in the installed RustDesk 1.4.9+67 executable. Compare
+                // all pixels; subpixel antialiasing varies between renderers.
+                var cornerInsets = new[] { 5, 3, 2, 1, 1 };
+                for (var y = 0; y < 48; y++)
+                for (var x = 0; x < 48; x++)
+                {
+                    var edgeRow = Math.Min(y, 47 - y);
+                    var inset = edgeRow < cornerInsets.Length ? cornerInsets[edgeRow] : 0;
+                    Assert.Equal(x >= inset && x < 48 - inset, image.GetPixel(x, y).A >= 128);
+                }
+            }
         }
     }
 
@@ -165,8 +204,9 @@ public sealed class AppBrandingTests
         var logo = AppBranding.Logo;
         Assert.Equal(logo.Width, logo.Height);
         Assert.True(logo.Width >= 256);
-        AssertWhiteBackground(logo.GetPixel(0, 0));
-        AssertWhiteBackground(logo.GetPixel(logo.Width - 1, logo.Height - 1));
+        Assert.Equal(0, logo.GetPixel(0, 0).A);
+        Assert.Equal(0, logo.GetPixel(logo.Width - 1, logo.Height - 1).A);
+        AssertWhiteBackground(logo.GetPixel(logo.Width / 2, 0));
         Assert.True(logo.GetPixel(logo.Width / 2, logo.Height / 2).A > 0);
     }
 

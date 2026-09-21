@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
   <title>RustDeskHop</title>
-  <desc>A large hopping bunny in front of an 18% slimmer RustDesk-derived ring, on white.</desc>
+  <desc>A large hopping bunny in front of an 18% slimmer RustDesk-derived ring, on a rounded white tile matching RustDesk's Windows icon.</desc>
   <!-- Single editable master. The ring originates from RustDesk's installed
        data/flutter_assets/assets/icon.svg; the gradient and outer arcs remain unchanged.
        Source SHA256: 4D6ECC2B45571382576049095435F41576C02E895B8766EF3F300623C35B3488.
@@ -17,14 +17,21 @@
          head, leaping body and two broad speed trails. No tiny facial details. -->
     <path id="bunny" d="M350 635 H514 C594 594 672 593 735 621 L757 605 C718 589 666 582 607 580 C548 574 492 548 482 519 C459 477 514 472 551 484 C633 483 718 521 789 567 C739 493 674 492 624 474 C588 465 555 447 544 423 C516 382 598 382 629 391 C740 407 802 466 831 566 C873 584 914 622 920 659 C929 700 902 716 871 708 C834 702 802 698 771 694 C818 729 854 764 871 798 C883 824 856 832 838 817 C772 768 704 738 651 731 C592 723 528 741 480 760 L450 791 C424 822 399 818 417 789 L463 743 H375 C346 743 347 700 375 700 H503 C530 700 528 676 503 676 H350 C321 676 322 635 350 635 Z"/>
   </defs>
-  <rect id="white-background" width="1024" height="1024" fill="#fff"/>
+  <!-- Match RustDesk's Windows icon tile: 160px corner radius on its 1024px
+       master, with the 832px mark centred inside 96px padding. The executable's
+       48px icon from RustDesk 1.4.9+67 was extracted to verify its silhouette.
+       Executable SHA256: 3CCD9D5E1F14D1013D12E79C8426A07CC057510FE6D6676309771F03DB2BFBDD.
+       The whole composition is inset together; neither outline is redrawn. -->
+  <rect id="white-background" width="1024" height="1024" rx="160" ry="160" fill="#fff"/>
+  <g id="rustdesk-icon-layout" transform="translate(512 512) scale(0.9244444444444444) translate(-512 -512)">
   <g id="rustdesk-ring" transform="translate(62 62) scale(34.61538461538461) translate(-66.993 -897.484)">
     <path fill="url(#b)" d="M89.318 903.552 L87.984891 905.137547 C87.613535 905.481556 87.454946 906.061065 87.70013 906.572432 C89.301699 909.924239 88.693508 913.920278 86.064772 916.546762 C83.43491 919.172119 79.434365 919.779184 76.079179 918.178741 C75.588806 917.949975 75.03756 918.094499 74.690497 918.430525 L73.056 919.795 A1.154 1.154 0 0 0 73.264 921.605 A13.005 13.005 0 0 0 89.174 919.693 A12.97 12.97 0 0 0 91.13 903.806 A1.154 1.154 0 0 0 89.318 903.552 Z M70.851 901.247 A12.969 12.969 0 0 0 68.831 917.132 A1.154 1.154 0 0 0 70.643 917.386 L71.962952 915.809213 C72.343587 915.466573 72.507085 914.880597 72.258839 914.362906 C70.656144 911.011099 71.263208 907.015059 73.893071 904.388576 C76.521807 901.762092 80.523478 901.155028 83.878664 902.755471 C84.362599 902.982331 84.906877 902.843548 85.255764 902.516992 L86.906 901.142 A1.152 1.152 0 0 0 86.698 899.332 A13.009 13.009 0 0 0 70.805 901.305 Z"/>
   </g>
-  <!-- 30% larger than the previous bunny relative to the canvas. A white
+  <!-- Preserve the approved enlarged bunny's proportions relative to the ring. A white
        under-stroke separates it from the ring without changing the ring path. -->
   <g id="foreground-bunny" transform="translate(512 540) scale(1.064) translate(-625 -605)">
     <use xlink:href="#bunny" fill="#fff" stroke="#fff" stroke-width="40" stroke-linejoin="round"/>
     <use xlink:href="#bunny" fill="url(#bunny-blue)"/>
+  </g>
   </g>
 </svg>
