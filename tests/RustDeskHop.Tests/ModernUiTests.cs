@@ -164,6 +164,23 @@ public sealed class ModernUiTests
         }
     });
 
+    [Fact]
+    public void PublicSignInRetryAndCancelRemainAccessibleAndContained() => OnSta(() =>
+    {
+        using var form = new PublicSignInForm("not-launched-during-this-test.exe");
+        _ = form.Handle;
+        form.PerformLayout();
+        var buttons = Descendants(form).OfType<ModernButton>().ToArray();
+        Assert.Contains(buttons, b => b.Text == "Retry connection");
+        Assert.Equal("Cancel", Assert.IsType<ModernButton>(form.CancelButton).Text);
+        foreach (var button in buttons)
+        {
+            Assert.True(button.TabStop);
+            Assert.True(button.Parent!.ClientRectangle.Contains(button.Bounds), $"Action is clipped: {button.Text}");
+        }
+        Assert.Contains(Descendants(form).OfType<Label>(), l => l.Text.Contains("RustDesk checks whether the account is accepted."));
+    });
+
     [Theory]
     [InlineData(780, 490)]
     [InlineData(780, 530)]

@@ -5,6 +5,7 @@ internal sealed class PublicSignInForm : BrandedForm
     private readonly string rustDeskPath;
     private readonly Label statusLabel = new();
     private readonly System.Windows.Forms.Timer loginTimer = new() { Interval = 750 };
+    private readonly RustDeskSignInAttempt signInAttempt = new(() => RustDeskAccountState.ReadLoginFingerprint());
 
     public PublicSignInForm(string rustDeskPath)
     {
@@ -40,7 +41,7 @@ internal sealed class PublicSignInForm : BrandedForm
 
         layout.Controls.Add(new Label
         {
-            Text = "In RustDesk, open Settings → Account → Login and choose Google, GitHub, or Microsoft. Complete the browser sign-in yourself. RustDeskHop will notice when it succeeds and continue your saved connection automatically.",
+            Text = "In RustDesk, open Settings → Account → Login and complete the browser sign-in. A new saved login will resume this connection. If you have already finished, choose Retry connection. RustDesk checks whether the account is accepted.",
             AutoSize = true,
             MaximumSize = new Size(520, 0),
             Margin = new Padding(0, 0, 0, 14),
@@ -48,6 +49,7 @@ internal sealed class PublicSignInForm : BrandedForm
 
         statusLabel.Text = "Waiting for RustDesk sign-in…";
         statusLabel.AutoSize = true;
+        statusLabel.MaximumSize = new Size(520, 0);
         statusLabel.ForeColor = AppTheme.Muted;
         layout.Controls.Add(statusLabel);
 
@@ -62,8 +64,8 @@ internal sealed class PublicSignInForm : BrandedForm
         openRustDesk.Click += (_, _) => OpenRustDesk();
         buttons.Controls.Add(openRustDesk);
 
-        var checkAgain = new ModernButton { Text = "Check sign-in", AutoSize = true };
-        checkAgain.Click += (_, _) => CheckLogin();
+        var checkAgain = new ModernButton { Text = "Retry connection", AutoSize = true };
+        checkAgain.Click += (_, _) => CheckLogin(userRequestedRetry: true);
         buttons.Controls.Add(checkAgain);
 
         var cancel = new ModernButton { Text = "Cancel", DialogResult = DialogResult.Cancel, AutoSize = true };
@@ -95,17 +97,23 @@ internal sealed class PublicSignInForm : BrandedForm
         }
     }
 
-    private void CheckLogin()
+    private void CheckLogin(bool userRequestedRetry = false)
     {
-        if (!RustDeskAccountState.HasLoginToken())
+        if (!signInAttempt.CanContinue(userRequestedRetry))
         {
-            statusLabel.Text = "Waiting for RustDesk sign-in…";
+            statusLabel.Text = "Waiting for a new saved login. Finished? Choose Retry connection.";
             return;
         }
 
         loginTimer.Stop();
-        statusLabel.Text = "Sign-in detected. Connecting…";
+        statusLabel.Text = "Retrying connection…";
         DialogResult = DialogResult.OK;
         Close();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) loginTimer.Dispose();
+        base.Dispose(disposing);
     }
 }

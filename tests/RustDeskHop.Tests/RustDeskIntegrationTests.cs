@@ -21,11 +21,24 @@ public sealed class RustDeskIntegrationTests
         var target = new TargetDefinition { RustDeskId = "123456789" };
         var profile = new ServerProfile { ServerAddress = "public" };
 
-        Assert.Equal("123456789@public", ConnectionTargetBuilder.Build(target, profile));
+        Assert.Equal("123456789", ConnectionTargetBuilder.Build(target, profile, RustDeskDefaultRoute.Public));
     }
 
-    [Fact]
-    public void BuildsPrivateConnectionTargetWithKey()
+    [Theory]
+    [InlineData((int)RustDeskDefaultRoute.Private)]
+    [InlineData((int)RustDeskDefaultRoute.Unknown)]
+    public void PublicConnectionRequiresAConfirmedPublicDefault(int route)
+    {
+        var target = new TargetDefinition { RustDeskId = "123456789" };
+        var profile = new ServerProfile { ServerAddress = "public" };
+        Assert.Throws<InvalidOperationException>(() => ConnectionTargetBuilder.Build(target, profile, (RustDeskDefaultRoute)route));
+    }
+
+    [Theory]
+    [InlineData((int)RustDeskDefaultRoute.Public)]
+    [InlineData((int)RustDeskDefaultRoute.Private)]
+    [InlineData((int)RustDeskDefaultRoute.Unknown)]
+    public void BuildsPrivateConnectionTargetWithKey(int route)
     {
         var target = new TargetDefinition { RustDeskId = "123456789" };
         var profile = new ServerProfile
@@ -36,7 +49,7 @@ public sealed class RustDeskIntegrationTests
 
         Assert.Equal(
             "123456789@rustdesk.example:21116?key=abc+/=",
-            ConnectionTargetBuilder.Build(target, profile));
+            ConnectionTargetBuilder.Build(target, profile, (RustDeskDefaultRoute)route));
     }
 
     [Theory]
@@ -48,7 +61,67 @@ public sealed class RustDeskIntegrationTests
         var target = new TargetDefinition { RustDeskId = id };
         var profile = new ServerProfile { ServerAddress = "public" };
 
-        Assert.Throws<InvalidOperationException>(() => ConnectionTargetBuilder.Build(target, profile));
+        Assert.Throws<InvalidOperationException>(() => ConnectionTargetBuilder.Build(target, profile, RustDeskDefaultRoute.Public));
+    }
+
+    [Theory]
+    [InlineData("rs-ny.rustdesk.com:21116", (int)RustDeskDefaultRoute.Public)]
+    [InlineData("RS-SG.RUSTDESK.COM:21116", (int)RustDeskDefaultRoute.Public)]
+    [InlineData("public", (int)RustDeskDefaultRoute.Public)]
+    [InlineData("", (int)RustDeskDefaultRoute.Public)]
+    [InlineData("rs-private.example:21116", (int)RustDeskDefaultRoute.Private)]
+    [InlineData("rs-ny.rustdesk.com.example:21116", (int)RustDeskDefaultRoute.Private)]
+    [InlineData("private.example:21116", (int)RustDeskDefaultRoute.Private)]
+    public void DefaultRouteUsesPublicHostsNotAPrefix(string server, int expected)
+    {
+        var path = WriteTemporaryFile($"rendezvous_server = '{server}'");
+        try { Assert.Equal((RustDeskDefaultRoute)expected, RustDeskConfigReader.ReadDefaultRoute(path)); }
+        finally { File.Delete(path); }
+    }
+
+    [Theory]
+    [InlineData("rendezvous_server = 'unterminated")]
+    [InlineData("rendezvous_server = 123")]
+    [InlineData("rendezvous_server = 'public'\nrendezvous_server = 'private.example'")]
+    public void MalformedServerConfigurationDoesNotEnablePublicRouting(string contents)
+    {
+        var path = WriteTemporaryFile(contents);
+        try { Assert.Equal(RustDeskDefaultRoute.Unknown, RustDeskConfigReader.ReadDefaultRoute(path)); }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void MissingOrLockedConfigIsUnknownEvenWithAPublicSavedProfile()
+    {
+        var path = WriteTemporaryFile("rendezvous_server = 'public'");
+        var settings = new AppSettings { Profiles = [new ServerProfile { ServerAddress = "public" }] };
+        try
+        {
+            using (var locked = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                Assert.Equal(RustDeskDefaultRoute.Unknown, RustDeskConfigReader.ReadDefaultRoute(path));
+                Assert.Null(RustDeskConfigReader.DetectDefaultProfile(settings, path));
+            }
+            File.Delete(path);
+            Assert.Equal(RustDeskDefaultRoute.Unknown, RustDeskConfigReader.ReadDefaultRoute(path));
+            Assert.Null(RustDeskConfigReader.DetectDefaultProfile(settings, path));
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void ReadableBuiltInDefaultIsPublicWithoutFallingBackToAPrivateSavedProfile()
+    {
+        var path = WriteTemporaryFile("[options]\ntheme = 'dark'");
+        try
+        {
+            Assert.Equal(RustDeskDefaultRoute.Public, RustDeskConfigReader.ReadDefaultRoute(path));
+            Assert.Null(RustDeskConfigReader.DetectDefaultProfile(new AppSettings
+            {
+                Profiles = [new ServerProfile { ServerAddress = "private.example" }],
+            }, path));
+        }
+        finally { File.Delete(path); }
     }
 
     [Fact]
@@ -64,6 +137,7 @@ public sealed class RustDeskIntegrationTests
         try
         {
             Assert.Equal("rs-ny.rustdesk.com:21116", RustDeskConfigReader.ReadConfiguredServer(path));
+            Assert.Equal(RustDeskDefaultRoute.Public, RustDeskConfigReader.ReadDefaultRoute(path));
         }
         finally
         {
@@ -82,6 +156,7 @@ public sealed class RustDeskIntegrationTests
         try
         {
             Assert.Equal("private.example:21116", RustDeskConfigReader.ReadConfiguredServer(path));
+            Assert.Equal(RustDeskDefaultRoute.Private, RustDeskConfigReader.ReadDefaultRoute(path));
         }
         finally
         {
@@ -117,6 +192,48 @@ public sealed class RustDeskIntegrationTests
         {
             File.Delete(path);
         }
+    }
+
+    [Fact]
+    public void FreshSignInDoesNotAutomaticallyAcceptAnUnchangedCachedLogin()
+    {
+        string? fingerprint = "old-fingerprint";
+        var attempt = new RustDeskSignInAttempt(() => fingerprint);
+        Assert.False(attempt.CanContinue());
+        Assert.True(attempt.CanContinue(userRequestedRetry: true));
+        fingerprint = null;
+        Assert.False(attempt.CanContinue());
+        Assert.False(attempt.CanContinue(userRequestedRetry: true));
+        fingerprint = "new-fingerprint";
+        Assert.True(attempt.CanContinue());
+    }
+
+    [Fact]
+    public void FreshSignInWithoutACacheWaitsForASavedLogin()
+    {
+        string? fingerprint = null;
+        var attempt = new RustDeskSignInAttempt(() => fingerprint);
+        Assert.False(attempt.CanContinue());
+        fingerprint = "new-fingerprint";
+        Assert.True(attempt.CanContinue());
+    }
+
+    [Fact]
+    public void LoginObservationUsesOnlyATokenFingerprintNotUnrelatedFileChanges()
+    {
+        var path = WriteTemporaryFile("access_token = 'test-only-token'\ntheme = 'dark'");
+        try
+        {
+            var fingerprint = RustDeskAccountState.ReadLoginFingerprint(path);
+            Assert.NotNull(fingerprint);
+            Assert.DoesNotContain("test-only-token", fingerprint);
+            var attempt = new RustDeskSignInAttempt(() => RustDeskAccountState.ReadLoginFingerprint(path));
+            File.WriteAllText(path, "access_token = 'test-only-token'\ntheme = 'light'");
+            Assert.False(attempt.CanContinue());
+            File.WriteAllText(path, "access_token = 'new-test-only-token'");
+            Assert.True(attempt.CanContinue());
+        }
+        finally { File.Delete(path); }
     }
 
     [Fact]
