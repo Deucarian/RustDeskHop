@@ -84,6 +84,8 @@ internal static class RustDeskLocator
     }
 }
 
+internal enum RustDeskDefaultRoute { Unknown, Public, Private }
+
 internal static class RustDeskConfigReader
 {
     public static string? ReadConfiguredServer()
@@ -92,48 +94,74 @@ internal static class RustDeskConfigReader
     }
 
     internal static string? ReadConfiguredServer(string path)
-    {
-        if (!File.Exists(path))
-        {
-            return null;
-        }
+        => TryReadConfiguredServer(path, out var server) ? server : null;
 
+    private static bool TryReadConfiguredServer(string path, out string? server)
+    {
+        server = null;
         try
         {
             var text = File.ReadAllText(path);
             // The top-level value is the effective server in current RustDesk builds.
             // Prefer it over a stale custom-rendezvous-server option when both exist.
-            var rendezvous = Regex.Match(text, "^rendezvous_server\\s*=\\s*['\"](?<value>[^'\"]+)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            if (rendezvous.Success && !string.IsNullOrWhiteSpace(rendezvous.Groups["value"].Value))
+            var rendezvous = ReadServerSetting(text, "rendezvous_server");
+            var custom = ReadServerSetting(text, "custom-rendezvous-server");
+            if (!string.IsNullOrWhiteSpace(rendezvous))
             {
-                return rendezvous.Groups["value"].Value.Trim();
+                server = rendezvous.Trim();
             }
-
-            var custom = Regex.Match(text, "custom-rendezvous-server\\s*=\\s*['\"](?<value>[^'\"]+)", RegexOptions.IgnoreCase);
-            return custom.Success ? custom.Groups["value"].Value.Trim() : null;
+            else
+            {
+                server = custom?.Trim();
+            }
+            return true;
         }
         catch
         {
-            return null;
+            return false;
         }
     }
 
-    public static ServerProfile? DetectDefaultProfile(AppSettings settings)
+    private static string? ReadServerSetting(string text, string name)
     {
-        var configured = ReadConfiguredServer();
-        if (string.IsNullOrWhiteSpace(configured))
+        var lines = Regex.Matches(text, $"^[ \\t]*{Regex.Escape(name)}[ \\t]*=.*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        if (lines.Count == 0) return null;
+        if (lines.Count != 1) throw new FormatException("Duplicate RustDesk server setting.");
+        var value = Regex.Match(lines[0].Value, "=[ \\t]*(['\"])(?<value>[^\\r\\n]*?)\\1[ \\t]*(?:#.*)?\\r?$", RegexOptions.CultureInvariant);
+        if (!value.Success) throw new FormatException("Unreadable RustDesk server setting.");
+        return value.Groups["value"].Value;
+    }
+
+    public static RustDeskDefaultRoute ReadDefaultRoute(string? path = null)
+    {
+        return TryReadConfiguredServer(path ?? RustDeskPaths.UserConfigPath, out var server)
+            ? ClassifyServer(server)
+            : RustDeskDefaultRoute.Unknown;
+    }
+
+    private static RustDeskDefaultRoute ClassifyServer(string? server)
+    {
+        if (string.IsNullOrWhiteSpace(server) || string.Equals(server, "public", StringComparison.OrdinalIgnoreCase))
         {
-            return settings.Profiles.FirstOrDefault(profile => profile.IsPublic)
-                ?? settings.Profiles.FirstOrDefault();
+            return RustDeskDefaultRoute.Public;
         }
 
-        if (string.Equals(configured, "public", StringComparison.OrdinalIgnoreCase)
-            || configured.StartsWith("rs-", StringComparison.OrdinalIgnoreCase))
+        // Match RustDesk's public rendezvous hosts, not any private host named rs-*.
+        var host = NormalizeHost(server);
+        return Regex.IsMatch(host, @"^rs-[a-z0-9-]+\.rustdesk\.com$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+            ? RustDeskDefaultRoute.Public
+            : RustDeskDefaultRoute.Private;
+    }
+
+    public static ServerProfile? DetectDefaultProfile(AppSettings settings, string? path = null)
+    {
+        if (!TryReadConfiguredServer(path ?? RustDeskPaths.UserConfigPath, out var configured)) return null;
+        if (ClassifyServer(configured) == RustDeskDefaultRoute.Public)
         {
             return settings.Profiles.FirstOrDefault(p => p.IsPublic);
         }
 
-        var configuredHost = NormalizeHost(configured);
+        var configuredHost = NormalizeHost(configured!);
         return settings.Profiles.FirstOrDefault(p =>
             string.Equals(p.ServerAddress, configured, StringComparison.OrdinalIgnoreCase)
             || string.Equals(NormalizeHost(p.ServerAddress), configuredHost, StringComparison.OrdinalIgnoreCase));
@@ -249,7 +277,7 @@ internal sealed partial class MainForm : BrandedForm
         try
         {
             var current = RustDeskConfigReader.DetectDefaultProfile(settings);
-            if (current is not null && !string.Equals(current.Id, profile.Id, StringComparison.OrdinalIgnoreCase))
+            if (!profile.IsPublic && current is not null && !string.Equals(current.Id, profile.Id, StringComparison.OrdinalIgnoreCase))
             {
                 var result = MessageBox.Show(
                     this,
@@ -299,12 +327,13 @@ internal sealed partial class MainForm : BrandedForm
                 return;
             }
 
-            if (profile.IsPublic && !await EnsurePublicLoginAsync(rustDeskPath, current))
+            if (profile.IsPublic && !await EnsurePublicLoginAsync(rustDeskPath))
             {
                 return;
             }
 
-            var connectTarget = ConnectionTargetBuilder.Build(target, profile);
+            // Recheck after any awaited probe/setup/dialog: the default may have changed.
+            var connectTarget = ConnectionTargetBuilder.Build(target, profile, RustDeskConfigReader.ReadDefaultRoute());
             RustDeskLauncher.Connect(rustDeskPath, connectTarget);
             statusLabel.Text = $"Connecting to {target.Name} via {profile.Name}.";
         }
@@ -320,18 +349,25 @@ internal sealed partial class MainForm : BrandedForm
         }
     }
 
-    private async Task<bool> EnsurePublicLoginAsync(string rustDeskPath, ServerProfile? current)
+    private async Task<bool> EnsurePublicLoginAsync(string rustDeskPath)
     {
-        if (RustDeskAccountState.HasLoginToken())
+        var route = RustDeskConfigReader.ReadDefaultRoute();
+        if (route == RustDeskDefaultRoute.Unknown)
         {
-            return true;
+            MessageBox.Show(this,
+                "RustDeskHop cannot read RustDesk's default network. Open RustDesk and check its network settings, then retry. No settings or sessions were changed.",
+                "Check RustDesk's network", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            statusLabel.Text = "Connection paused — RustDesk's default network is unknown.";
+            return false;
         }
 
-        if (current is null || !current.IsPublic)
+        if (route == RustDeskDefaultRoute.Public && RustDeskAccountState.HasLoginToken()) return true;
+
+        if (route == RustDeskDefaultRoute.Private)
         {
             var result = MessageBox.Show(
                 this,
-                "RustDesk's public network needs a one-time browser sign-in. To make the Google/GitHub buttons available, RustDeskHop must make the public network RustDesk's default. Saved private clients will still use their own direct route.\n\nVisible RustDesk sessions will close, and Windows may ask for administrator approval. Continue?",
+                "Public connections need RustDesk's public default to use your account login. RustDeskHop can prepare it; saved private clients will keep their own explicit routes.\n\nThis changes this PC's incoming/default registration. Visible RustDesk sessions will close, and Windows may ask for administrator approval. Do not continue if private RustDesk access is your only way into this PC. Continue?",
                 "Prepare public RustDesk sign-in?",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
@@ -361,7 +397,7 @@ internal sealed partial class MainForm : BrandedForm
             return false;
         }
 
-        statusLabel.Text = "Public sign-in detected. Continuing connection…";
+        statusLabel.Text = "Retrying the public connection with RustDesk's account…";
         return true;
     }
 
