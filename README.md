@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Assets/RustDeskHop.png" alt="RustDeskHop rabbit icon" width="144" height="144">
+  <img src="Assets/RustDeskHop.svg" alt="RustDeskHop rabbit icon" width="144" height="144">
 </p>
 
 # RustDeskHop — RustDesk Network Companion
@@ -65,6 +65,12 @@ The light interface puts the computer list and connection actions in one rounded
 
 The rabbit icon stays in the title bar and taskbar, without a second oversized logo in the content. All windows use real Windows caption controls (minimize, maximize/restore, close), native resizing, snapping and the system menu—not text-symbol imitations. On Windows 11, the title bar blends into the app's light canvas using [Windows' supported caption-colour attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute); older Windows versions retain standard system chrome, and high-contrast mode retains system caption colours. Network settings and the add-computer dialog share the same styling. These presentation changes do not change RustDesk routing or close existing sessions.
 
+### System tray
+
+Closing or minimizing the main window keeps RustDeskHop available in the Windows notification area. Click its tray icon (or right-click and choose **Open RustDeskHop**) to reopen it. Launching the application again also restores the existing window instead of creating a second tray icon. If Windows places it in the hidden-icons overflow, look under the **^** arrow beside the clock.
+
+To quit completely, right-click the tray icon and choose **Exit**. Finish or cancel any open editor/confirmation first. Exiting RustDeskHop does not stop RustDesk or disconnect its sessions. Windows shutdown and sign-out still close the companion normally.
+
 ### Incoming connections to this PC
 
 RustDeskHop controls the route used by **new outgoing connections**. It does not change this PC's incoming/default RustDesk registration during normal use. This means the PC can remain available through RustDesk's public service while it opens a separate connection through a private server.
@@ -99,15 +105,15 @@ The executable is produced under `bin\Release\net9.0-windows\`.
 
 ### Application icon
 
-**Edit only `Assets/RustDeskHop.png`.** This is the single master for the approved blue-on-white rabbit artwork and the README. Do not maintain separate source, title-bar, taskbar or shortcut artwork.
+**Edit only `Assets/RustDeskHop.svg`.** This is the single master, including the README. It preserves the user-selected **A / earlier thin-ring bunny** as an embedded image, with a precise vector ring and a white rounded tile. Do not maintain separate title-bar, taskbar, tray or shortcut artwork.
 
-Every Windows build automatically runs `tools/Build-ApplicationIcon.ps1` when the master changes. It generates a transparent, uniformly padded PNG and a multi-resolution ICO under the build's intermediate `branding` directory. Both are embedded in the executable and copied into release `Assets/`; generated files are not committed. The header PNG is the same 256px frame contained in the ICO.
+Every Windows build automatically runs `tools/Build-ApplicationIcon.ps1` when the master or renderer changes. The build-only .NET SVG renderer renders the master at its native resolution, then derives the multi-resolution ICO and preview PNG with no added transparent margin and no non-uniform stretching. No Node, Python, RustDesk installation or artwork download is needed. Outputs go under the build's intermediate `branding` directory, are embedded in the executable and copied into release `Assets/`; generated files are not committed. The release preview PNG is exactly the 256px frame contained in the ICO, not a second editable master.
 
-The master can have transparency or the approved white tile on a black presentation backdrop. The generator decodes only the connected exterior black matte, trims the unused padding, and scales uniformly without redrawing the artwork. Replace that one PNG and rebuild; no other artwork file needs editing.
+The embedded approved artwork has SHA-256 `B4AAFD2C037A37C279283FDA94BA92511FE92CA29B2E68A47F99CB1C82DC1378`; its original bunny pixels and colours are retained, not approximated by a new drawing. A clip selects the bunny and excludes its former ring. The ring's outer/inner radii are 414/338 (76-unit thin band). One half is reused with exactly `rotate(180)`, then the pair is aligned at -45/135 degrees to match RustDesk's diagonal opening direction. Both openings therefore have identical width and rounded endings by construction. The bunny's foreground clearance intentionally overlaps the left ring; the overall bunny logo is not rotationally symmetric. The tile uses RustDesk's 160/1024 corner-radius proportion. This is distinct companion artwork, not the original RustDesk logo. Regression tests protect the original embedded image, shared ring geometry, rendered openings, thin band, balanced frame coverage and shared Windows assets.
 
-For local deployment, `tools/Update-LocalBranding.ps1 -InstallDirectory <installed app folder>` refreshes only existing RustDeskHop shortcuts targeting that installation. Its cache-keyed icon copy is derived automatically from the generated ICO, never edited independently. RustDesk itself retains its own icon.
+For local deployment, `tools/Update-LocalBranding.ps1 -InstallDirectory <installed app folder>` refreshes only existing RustDeskHop shortcuts targeting that installation. Its cache-keyed icon copy is derived automatically from the generated ICO, never edited independently. The updater also refreshes the executable's own icon entry with [Windows' targeted shell notification](https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shupdateimagew), because newly pinned shortcuts may use that entry instead. It does not clear the global icon cache or restart Explorer. RustDesk itself retains its own icon. Use `-WhatIf` for a no-change preview.
 
-To update an existing local installation, close RustDeskHop (leave RustDesk running), publish, then run `tools/Install-Local.ps1 -PublishDirectory <publish folder> -InstallDirectory <app folder> -BackupDirectory <new backup folder>`. This backs up the previous files and matching shortcuts, installs the generated assets, and automatically refreshes the shortcut icons. It does not create startup items or change saved computers, network settings, or RustDesk services.
+To update an existing local installation, choose **Exit** from RustDeskHop's tray menu (leave RustDesk running), publish, then run `tools/Install-Local.ps1 -PublishDirectory <publish folder> -InstallDirectory <app folder> -BackupDirectory <new backup folder>`. This backs up the previous files and matching shortcuts, installs the generated assets, and automatically refreshes the shortcut icons. It does not create startup items or change saved computers, network settings, or RustDesk services.
 
 ## Branches and automation
 
