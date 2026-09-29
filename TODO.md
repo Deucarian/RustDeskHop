@@ -8,12 +8,13 @@
 - [x] Exclude developer seed settings from publishing and validate distribution contents.
 - [x] Add a per-user installer with Start Menu/optional startup and retained settings on uninstall; add disposable-runner smoke tests.
 - [x] Preserve GPL-3.0-only, include resolved runtime notices and matching source; document installer licensing.
-- [x] Prepare optional free OSS signing, signature verification and artifact provenance. Block stable releases until required evidence/signing exists.
-- [ ] Obtain signing-provider approval, configure real credentials/policies, and verify signed app/setup on a fresh Windows PC. See `docs/CODE_SIGNING.md`.
-- [ ] Resolve branding clearance or approve a clearly independent replacement. Permission-request draft is in `docs/BRANDING.md`; it has not been sent.
+- [x] Prepare optional free OSS signing, signature verification and artifact provenance. Stable releases still require recorded branding/manual-validation evidence, but not signing enrollment.
+- [x] Document the hobby/community project statement, free official downloads, GPL-3.0-only and possible future collaboration without automatic copyright transfer. Keep the current logo unchanged.
+- [ ] Optional polish: obtain signing-provider approval, configure real credentials/policies, and verify signed app/setup on a fresh Windows PC. This is not a GPL or stable-release requirement. See `docs/CODE_SIGNING.md`.
+- [ ] Keep the current logo and obtain friendly written permission from RustDesk. Permission-request draft and contact research are in `docs/BRANDING.md`; it has not been sent.
 - [ ] Complete and record real clean-user, UAC, DPI/mixed-monitor and cross-version connection checks in `docs/TESTING.md`.
 - [ ] Record the short real-connection demo described in `docs/TESTING.md` after those checks.
-- [ ] Publish the validated readiness fixes; do not replace old release assets or claim unperformed tests passed.
+- [x] Publish the validated readiness fixes to develop/main and [v0.1.1-beta.1](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.1). Old assets remain unchanged; the release does not claim unperformed checks passed.
 
 ## Readiness defects found on 2026-09-29
 
