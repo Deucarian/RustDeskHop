@@ -46,6 +46,8 @@ The intended workflow is:
 
 After the one-time RustDesk public-account setup, this is a single selection and confirmation. If public sign-in has never been completed, RustDeskHop can prepare the public profile with Windows administrator approval, open RustDesk, wait for the user to finish the browser login, and then continue the original connection automatically. Backups of any RustDesk configuration touched by this recovery flow are kept in a `RustDeskHop Backups` folder beside the original configuration.
 
+Public outgoing connections require RustDesk's default network to be public. RustDeskHop uses the normal computer ID to retain RustDesk's account login; RustDesk 1.4.9 drops that login for an explicit `@public` target. Private connections still use an explicit server/key route. If the default is private, changing it requires a separate confirmation because it changes incoming registration and closes visible RustDesk sessions. If the default cannot be read, the public connection stops without changing anything.
+
 ## How to use RustDeskHop
 
 For normal day-to-day use:
@@ -94,7 +96,7 @@ For reliable unattended incoming access, keep the RustDesk background service in
 
 ### Troubleshooting
 
-- **Public connection asks for login:** complete RustDesk's browser sign-in once, then retry from RustDeskHop.
+- **Public connection asks for login:** complete or renew RustDesk's browser sign-in, then retry from RustDeskHop. A cached token is not proof that RustDesk's server accepts the account. The companion's sign-in dialog waits for a changed saved login, or lets you explicitly choose **Retry connection** after finishing; an unchanged cached token cannot automatically dismiss it.
 - **Private server is unreachable:** confirm the required VPN or Tailscale connection is active and the server is online.
 - **Password prompt appears:** enter the remote computer's password and choose RustDesk's remember option if desired.
 - **Wrong network is shown:** use **Manage networks** or edit the saved client assignment before connecting.

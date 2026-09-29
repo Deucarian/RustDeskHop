@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Simultria.RustDeskCompanion;
@@ -23,7 +25,7 @@ internal static class RustDeskPaths
 
 internal static class ConnectionTargetBuilder
 {
-    public static string Build(TargetDefinition target, ServerProfile profile)
+    public static string Build(TargetDefinition target, ServerProfile profile, RustDeskDefaultRoute defaultRoute)
     {
         var id = target.RustDeskId.Trim();
         if (string.IsNullOrWhiteSpace(id) || id.IndexOfAny(['@', '?', '&']) >= 0)
@@ -33,7 +35,14 @@ internal static class ConnectionTargetBuilder
 
         if (profile.IsPublic)
         {
-            return $"{id}@public";
+            if (defaultRoute != RustDeskDefaultRoute.Public)
+            {
+                throw new InvalidOperationException("RustDesk's default network is not confirmed public. Check its network settings, then retry. No connection was opened.");
+            }
+
+            // RustDesk 1.4.9 clears the account token for all other-server targets,
+            // including @public. A bare ID preserves the public account login.
+            return id;
         }
 
         var server = profile.ServerAddress.Trim();
@@ -60,22 +69,47 @@ internal static class RustDeskAccountState
         RegexOptions.Multiline | RegexOptions.CultureInvariant);
 
     public static bool HasLoginToken(string? path = null)
+        => ReadLoginFingerprint(path) is not null;
+
+    internal static string? ReadLoginFingerprint(string? path = null)
     {
         path ??= RustDeskPaths.LocalConfigPath;
         try
         {
             if (!File.Exists(path))
             {
-                return false;
+                return null;
             }
 
             var match = AccessTokenPattern.Match(File.ReadAllText(path));
-            return match.Success && !string.IsNullOrWhiteSpace(match.Groups["value"].Value);
+            var token = match.Groups["value"].Value;
+            return match.Success && !string.IsNullOrWhiteSpace(token)
+                ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)))
+                : null;
         }
         catch
         {
-            return false;
+            return null;
         }
+    }
+}
+
+// Only observes local state; neither token presence nor a change proves server acceptance.
+internal sealed class RustDeskSignInAttempt
+{
+    private readonly Func<string?> readFingerprint;
+    private readonly string? initialFingerprint;
+
+    public RustDeskSignInAttempt(Func<string?> readFingerprint)
+    {
+        this.readFingerprint = readFingerprint;
+        initialFingerprint = readFingerprint();
+    }
+
+    public bool CanContinue(bool userRequestedRetry = false)
+    {
+        var current = readFingerprint();
+        return current is not null && (userRequestedRetry || current != initialFingerprint);
     }
 }
 

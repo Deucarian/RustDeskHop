@@ -1,5 +1,12 @@
 # TODO
 
+## Live-test findings (2026-09-29)
+
+- [x] Fix public outgoing authentication routing: RustDesk 1.4.9 strips the account token from `@public` connections. Use a bare ID only with a confirmed public default, keep explicit private routes, and prevent an unchanged cached token from auto-completing a fresh sign-in dialog. Covered by regression tests; live results are recorded in `docs/TESTING.md`.
+- [ ] Complete the authenticated Debian/public round trip after the user handles login/password prompts. Private server reachability and a password prompt are not proof of a working remote desktop.
+- [ ] Finish real DPI checks once Windows System → Display is open; restore the original scale. No scaling was changed in the initial live pass.
+- [ ] Run clean-user installation and disruptive UAC/version checks later in a disposable environment, not on the live remote-access setup.
+
 ## Public-readiness follow-up (2026-09-29)
 
 - [x] Upgrade the application, branding renderer and tests to .NET 10 LTS.
@@ -11,7 +18,7 @@
 - [x] Prepare optional free OSS signing, signature verification and artifact provenance. Stable releases still require recorded branding/manual-validation evidence, but not signing enrollment.
 - [x] Document the hobby/community project statement, free official downloads, GPL-3.0-only and possible future collaboration without automatic copyright transfer. Keep the current logo unchanged.
 - [ ] Optional polish: obtain signing-provider approval, configure real credentials/policies, and verify signed app/setup on a fresh Windows PC. This is not a GPL or stable-release requirement. See `docs/CODE_SIGNING.md`.
-- [ ] Keep the current logo and obtain friendly written permission from RustDesk. Permission-request draft and contact research are in `docs/BRANDING.md`; it has not been sent.
+- [ ] Branding status remains unresolved; keep the current logo. RustDesk outreach is cancelled by the maintainer: do not email or otherwise contact RustDesk, and do not ask for a sending account. The cancelled reference draft is in `docs/BRANDING.md`; no email or mailbox draft was created.
 - [ ] Complete and record real clean-user, UAC, DPI/mixed-monitor and cross-version connection checks in `docs/TESTING.md`.
 - [ ] Record the short real-connection demo described in `docs/TESTING.md` after those checks.
 - [x] Publish the validated readiness fixes to develop/main and [v0.1.1-beta.1](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.1). Old assets remain unchanged; the release does not claim unperformed checks passed.

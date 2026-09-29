@@ -4,9 +4,9 @@ The sole editable icon source is `Assets/RustDeskHop.svg`. It combines the user-
 
 The original RustDesk logo is not licensed by this repository. GPL source licensing does not by itself grant trademark permission, endorsement, or rights to every reference image. User approval of the design is not upstream legal clearance. **Clearance has not been obtained.** Preserve the approved design while resolving this; do not silently substitute another logo.
 
-The maintainer's decision on 2026-09-29 is to **keep the current logo** and seek a friendly written okay from RustDesk for the mark/name before broad public promotion. Being an independent, noncommercial hobby project is context for that request, not evidence of permission. If RustDesk requests changes or declines, discuss the response with the maintainer before changing branding. Obtain legal advice if the scope is unclear. Do not set `brandingCleared` in `release-readiness.json` until the evidence is recorded here.
+The maintainer's latest instruction on 2026-09-29 is to **keep the current logo and not contact RustDesk**. The earlier outreach plan is cancelled: do not send an email, create a mailbox draft, post a permission request, or ask for a sending account. The text below is retained only as a cancelled repository draft. No message was sent and no mailbox draft was created. This decision does not establish branding permission; do not set `brandingCleared` in `release-readiness.json` without actual evidence.
 
-## Draft permission request — not sent
+## Cancelled reference draft — do not send
 
 **Subject:** Friendly name/logo permission request for RustDeskHop, an independent open-source companion
 
@@ -25,6 +25,6 @@ The maintainer's decision on 2026-09-29 is to **keep the current logo** and seek
 > Thanks for making RustDesk available!
 > Deucarian
 
-Contact check on 2026-09-29: RustDesk's [official support page](https://rustdesk.com/support/) lists `support@rustdesk.com` for Pro support and Discord for community help. No dedicated branding-permission address has been verified. The draft can ask that team to route the request, or the maintainer can choose a community contact. Confirm the sender/channel before sending; do not open an unrelated bug or security report.
+Earlier contact research (historical only): RustDesk's [official support page](https://rustdesk.com/support/) lists `support@rustdesk.com` for Pro support and Discord for community help. No dedicated branding-permission address was verified. These details are not an instruction to contact anyone.
 
-This draft has **not been sent**. Record the sent date/channel, permitted uses, conditions and an appropriate public reference once available (redacting private contact details). A request, silence, or an informal acknowledgment is not recorded permission.
+This draft has **not been sent and must not be sent**. There is no pending sender/channel decision. Branding status remains unresolved; no permission or endorsement is claimed.
