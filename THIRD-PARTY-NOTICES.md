@@ -14,6 +14,16 @@ Installers use the unmodified [Inno Setup](https://jrsoftware.org/) engine, copy
 
 The SVG renderer uses SVG.NET and its dependencies only while building branding. Tests use xUnit, Microsoft.NET.Test.Sdk and their dependencies. Their versions, declared licenses and source repositories can be inspected in the NuGet metadata for the project package references and resolved assets. These renderer/test assemblies must not be copied into the app's published directory. Dependency notices for redistributed .NET components are not replaced by this inventory.
 
+| Tool dependency | Version | Declared package license | Source |
+| --- | --- | --- | --- |
+| SVG.NET (`Svg`) | 3.4.8 | MS-PL | https://github.com/svg-net/SVG |
+| ExCSS | 4.2.3 | MIT | https://github.com/TylerBrinks/ExCSS |
+| Microsoft.NET.Test.Sdk | 17.13.0 | MIT | https://github.com/microsoft/vstest |
+| xUnit | 2.9.2 | Apache-2.0 | https://github.com/xunit/xunit |
+| xunit.runner.visualstudio | 2.8.2 | Apache-2.0 | https://github.com/xunit/visualstudio.xunit |
+
+The SVG renderer is a separate build process; its MS-PL library is neither linked into the application nor included in downloads. Do not bundle renderer/test binaries into a GPL application package without separately reviewing their terms. This table reports package metadata, not a blanket compatibility opinion. Keep it current when updating those references.
+
 ## RustDesk and branding
 
 RustDesk is separately installed and is not included in the downloads. It retains [its own license](https://github.com/rustdesk/rustdesk/blob/master/LICENCE). RustDesk's name, logo and trademarks are not licensed by RustDeskHop. The companion artwork's provenance and unresolved clearance are tracked in [BRANDING.md](docs/BRANDING.md).
