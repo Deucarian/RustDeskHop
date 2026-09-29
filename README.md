@@ -4,9 +4,9 @@
 
 # RustDeskHop — RustDesk Network Companion
 
-RustDeskHop is a free, open-source, independent companion for RustDesk, licensed under [GNU GPLv3](LICENSE) (`GPL-3.0-only`). It is not affiliated with or endorsed by the RustDesk project.
+RustDeskHop is an independent, community-driven companion for RustDesk, maintained as a hobby project. Official downloads are free of charge, and the source is licensed under [GNU GPLv3](LICENSE) (`GPL-3.0-only`). Contributions are welcome, including potential future collaboration with the RustDesk project. It is not currently affiliated with or endorsed by RustDesk.
 
-**Public testing, not a broad production-readiness claim.** Everyone is welcome to test, [report bugs or request features](https://github.com/Deucarian/RustDeskHop/issues/new/choose), and contribute. Read the [remaining validation and known limitations](docs/TESTING.md). Signing enrollment and branding clearance are still pending; current downloads are unsigned. See the [code signing policy](docs/CODE_SIGNING.md), [branding record](docs/BRANDING.md) and [privacy policy](PRIVACY.md). Do not disable Windows security to run a download.
+**Public testing, not a broad production-readiness claim.** Everyone is welcome to test, [report bugs or request features](https://github.com/Deucarian/RustDeskHop/issues/new/choose), and contribute. Read the [remaining validation and known limitations](docs/TESTING.md). Branding clearance is still pending. Code signing is optional, not a GPL requirement; current downloads are unsigned and Windows may warn or block them. See the [code signing policy](docs/CODE_SIGNING.md), [branding record](docs/BRANDING.md) and [privacy policy](PRIVACY.md). Do not disable Windows security to run a download.
 
 ## Quick start
 
@@ -160,7 +160,7 @@ To update an existing local installation, choose **Exit** from RustDeskHop's tra
 - Automated tests verify connection routing, RustDesk configuration detection, login detection, safe public-profile cleanup, and private-server probing.
 - Every push to either branch produces a self-contained Windows ZIP artifact in GitHub Actions.
 
-Builds also produce a per-user installer and test evidence. GitHub-hosted jobs validate the installed executable, shortcut behavior and uninstall data retention. Pinned workflow actions and dependency-update proposals help maintain the build chain. Tagged releases include provenance attestations, runtime notices, hashes and matching source. Stable releases fail closed until recorded branding/manual-validation gates and approved signing are enabled; unsigned opt-in prereleases remain possible. This does not restrict independent builds or forks.
+Builds also produce a per-user installer and test evidence. GitHub-hosted jobs validate the installed executable, shortcut behavior and uninstall data retention. Pinned workflow actions and dependency-update proposals help maintain the build chain. Tagged releases include provenance attestations, runtime notices, hashes and matching source. Stable releases require recorded branding clearance and completed manual validation. Signing is optional for both stable and prerelease downloads; releases disclose their signature status. If signing is enabled, a signing failure blocks publication rather than silently publishing unsigned files. These official-release checks do not restrict independent builds or forks.
 
 Because this is a desktop utility, the automated deployment target is a downloadable build artifact rather than a server. Version tags also publish permanent GitHub Releases, as described below.
 
@@ -181,6 +181,14 @@ New readiness-enabled releases include `LICENSE`, `RustDeskHop-v<version>-notice
 Verify a download with `Get-FileHash <file> -Algorithm SHA256` against the matching checksum file. For releases with attestations, use `gh attestation verify <file> --repo Deucarian/RustDeskHop`. A checksum detects changed bytes; provenance identifies the build; neither substitutes for reviewing code or a Windows publisher signature. See [Code signing policy](docs/CODE_SIGNING.md) for the exact status.
 
 ## License
+
+### Community commitment
+
+Official RustDeskHop downloads will remain free of charge. This is the project's distribution policy, not a noncommercial restriction: [GPL permits others to charge for redistribution](https://www.gnu.org/licenses/gpl-faq.html.en#DoesTheGPLAllowMoney) while preserving recipients' rights under the license.
+
+Future upstream contributions or a friendly repository handover to RustDesk are welcome subjects for discussion, not an agreement already made. A [GitHub repository transfer](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository) changes repository administration; it is not a copyright assignment. Any copyright transfer would need a separate agreement with the relevant rights holders. Contributing here does not assign copyright, and this statement does not change the GPL rights already granted.
+
+### License terms
 
 RustDeskHop's original code, documentation, and included original artwork are licensed under the **GNU General Public License, version 3 only** (`GPL-3.0-only`). See [LICENSE](LICENSE) for the full terms.
 
