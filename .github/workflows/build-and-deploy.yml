@@ -30,6 +30,12 @@ jobs:
       - name: Disposable-runner install, upgrade, launch and uninstall smoke test
         shell: pwsh
         run: ./tools/Test-Installer.ps1 -Installer "artifacts/RustDeskHop-v0.0.0-ci.${{ github.run_number }}-win-x64-setup.exe"
+      - name: Exercise versioned release packaging without publication
+        shell: pwsh
+        run: |
+          ./tools/Package-Release.ps1 -Version "0.0.0-ci.${{ github.run_number }}" -PublishDirectory publish -InstallerDirectory artifacts -OutputDirectory "$env:RUNNER_TEMP/release-validation"
+          $assets = @(Get-ChildItem "$env:RUNNER_TEMP/release-validation" -File)
+          if ($assets.Count -ne 8) { throw 'Expected eight versioned release assets including checksums, notices and source.' }
       - name: Upload build and test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
