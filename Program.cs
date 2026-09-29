@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Net.Sockets;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -11,6 +9,26 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "--verify-install")
+        {
+            // Smoke-test the actual distributed executable without the single-instance
+            // host, user settings, RustDesk, startup registration or a remote connection.
+            try
+            {
+                ApplicationConfiguration.Initialize();
+                using var preview = new MainForm(new AppSettings());
+                _ = preview.Handle;
+                preview.PerformLayout();
+                Environment.ExitCode = preview.Icon is not null && preview.Controls.Count > 0 ? 0 : 1;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                Environment.ExitCode = 1;
+            }
+            return;
+        }
+
         if (RustDeskPublicProfileSetup.TryHandleCommand(args, out var exitCode))
         {
             Environment.ExitCode = exitCode;
@@ -49,92 +67,6 @@ internal sealed class TargetDefinition
     public string Name { get; set; } = "New client";
     public string RustDeskId { get; set; } = "";
     public string ProfileId { get; set; } = "";
-}
-
-internal static class ConfigStore
-{
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true,
-    };
-
-    public static string DirectoryPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "SimultriaRustDeskCompanion");
-
-    public static string FilePath => Path.Combine(DirectoryPath, "settings.json");
-
-    public static AppSettings Load()
-    {
-        var saved = TryRead(FilePath);
-        if (saved is not null && saved.Profiles.Count > 0)
-        {
-            return saved;
-        }
-
-        // A developer can keep machine-specific profiles beside the executable in an
-        // ignored settings.local.json file without putting them in the public repository.
-        var localSeed = TryRead(Path.Combine(AppContext.BaseDirectory, "settings.local.json"));
-        if (localSeed is not null && localSeed.Profiles.Count > 0)
-        {
-            return localSeed;
-        }
-
-        return CreateDefaults();
-    }
-
-    private static AppSettings? TryRead(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-            {
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), JsonOptions);
-            }
-        }
-        catch
-        {
-            // The UI will still start with safe defaults if the settings file is damaged.
-        }
-
-        return null;
-    }
-
-    public static void Save(AppSettings settings)
-    {
-        Directory.CreateDirectory(DirectoryPath);
-        var temporaryPath = FilePath + ".tmp";
-        File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings, JsonOptions));
-        File.Move(temporaryPath, FilePath, true);
-    }
-
-    private static AppSettings CreateDefaults()
-    {
-        var publicProfile = new ServerProfile
-        {
-            Id = "public",
-            Name = "RustDesk Public",
-            ServerAddress = "public",
-        };
-
-        var privateProfile = new ServerProfile
-        {
-            Id = "private-example",
-            Name = "Private RustDesk",
-            ServerAddress = "private-server.example:21116",
-            PublicKey = "",
-            RequiresPrivateNetwork = true,
-            ProbeHost = "private-server.example",
-            ProbePort = 21116,
-        };
-
-        return new AppSettings
-        {
-            Profiles = [publicProfile, privateProfile],
-            Targets = [],
-        };
-    }
 }
 
 internal static class RustDeskLocator
@@ -215,35 +147,6 @@ internal static class RustDeskConfigReader
         return firstColon >= 0 && firstColon == lastColon
             ? value[..firstColon]
             : value;
-    }
-}
-
-internal static class NetworkProbe
-{
-    public static async Task<bool> CanReachAsync(ServerProfile profile, CancellationToken cancellationToken = default)
-    {
-        if (!profile.RequiresPrivateNetwork)
-        {
-            return true;
-        }
-
-        var host = string.IsNullOrWhiteSpace(profile.ProbeHost)
-            ? profile.ServerAddress.Split(':', 2)[0]
-            : profile.ProbeHost;
-        var port = profile.ProbePort > 0 ? profile.ProbePort : 21116;
-
-        try
-        {
-            using var client = new TcpClient();
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromSeconds(3));
-            await client.ConnectAsync(host, port, timeout.Token);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }
 
@@ -473,9 +376,7 @@ internal sealed partial class MainForm : BrandedForm
         using var dialog = new TargetEditorForm(settings.Profiles, null);
         if (dialog.ShowDialog(this) == DialogResult.OK)
         {
-            settings.Targets.Add(dialog.Target);
-            ConfigStore.Save(settings);
-            RefreshTargets();
+            SaveSettings(new AppSettings { Profiles = settings.Profiles, Targets = [.. settings.Targets, dialog.Target] });
         }
     }
 
@@ -495,9 +396,7 @@ internal sealed partial class MainForm : BrandedForm
         var target = settings.Targets[index];
         if (MessageBox.Show(this, $"Remove “{target.Name}” from the companion?", "Remove client", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
         {
-            settings.Targets.RemoveAt(index);
-            ConfigStore.Save(settings);
-            RefreshTargets();
+            SaveSettings(new AppSettings { Profiles = settings.Profiles, Targets = settings.Targets.Where((_, i) => i != index).ToList() });
         }
     }
 
@@ -506,9 +405,22 @@ internal sealed partial class MainForm : BrandedForm
         using var dialog = new ProfilesForm(settings.Profiles);
         if (dialog.ShowDialog(this) == DialogResult.OK)
         {
-            settings.Profiles = dialog.Profiles;
-            ConfigStore.Save(settings);
+            SaveSettings(new AppSettings { Profiles = dialog.Profiles, Targets = settings.Targets });
+        }
+    }
+
+    private void SaveSettings(AppSettings updated)
+    {
+        try
+        {
+            ConfigStore.Save(updated);
+            settings = updated;
             RefreshTargets();
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(this, $"Your changes could not be saved. The previous settings were kept.\n\n{ex.Message}",
+                "Settings not saved", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 }

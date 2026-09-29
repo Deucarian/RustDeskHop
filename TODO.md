@@ -1,5 +1,28 @@
 # TODO
 
+## Public-readiness follow-up (2026-09-29)
+
+- [x] Upgrade the application, branding renderer and tests to .NET 10 LTS.
+- [x] Reject alternate-account elevated setup before it can touch RustDesk settings.
+- [x] Enable private vulnerability reporting; add public bug/feature guidance, contributing/security/privacy policies.
+- [x] Exclude developer seed settings from publishing and validate distribution contents.
+- [x] Add a per-user installer with Start Menu/optional startup and retained settings on uninstall; add disposable-runner smoke tests.
+- [x] Preserve GPL-3.0-only, include resolved runtime notices and matching source; document installer licensing.
+- [x] Prepare optional free OSS signing, signature verification and artifact provenance. Block stable releases until required evidence/signing exists.
+- [ ] Obtain signing-provider approval, configure real credentials/policies, and verify signed app/setup on a fresh Windows PC. See `docs/CODE_SIGNING.md`.
+- [ ] Resolve branding clearance or approve a clearly independent replacement. Permission-request draft is in `docs/BRANDING.md`; it has not been sent.
+- [ ] Complete and record real clean-user, UAC, DPI/mixed-monitor and cross-version connection checks in `docs/TESTING.md`.
+- [ ] Record the short real-connection demo described in `docs/TESTING.md` after those checks.
+- [ ] Publish the validated readiness fixes; do not replace old release assets or claim unperformed tests passed.
+
+## Readiness defects found on 2026-09-29
+
+- [x] Stop public-login preparation before any server-setting command when a configuration backup fails; cover partial setup and rollback failures with isolated tests of the production code.
+- [x] Keep damaged settings unchanged at startup, warn the user, and require a successful backup before explicitly replacing them.
+- [x] Validate deserialized settings, handle null/malformed lists and entries, and report save failures without crashing or applying unsaved changes.
+- [x] Parse DNS, IPv4 and IPv6 probe hosts correctly and add real loopback reachability regression tests.
+- [ ] Complete clean-machine, alternate-administrator/UAC, real high-DPI/mixed-monitor and cross-version connection checks before claiming broad public readiness.
+
 ## Priority: refine UI sizing and match the approved design
 
 - [x] Restore the user-selected A / earlier thin-ring artwork as the single PNG master. Remove its outer padding without redrawing the bunny/ring, regenerate all icon sizes, and refresh only RustDeskHop's shortcut and executable shell-icon entries. This supersedes the later SVG ring experiments below.

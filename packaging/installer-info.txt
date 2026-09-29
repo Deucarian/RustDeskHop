@@ -1,0 +1,20 @@
+RustDeskHop is a free, independent, open-source companion for RustDesk.
+It is not affiliated with or endorsed by RustDesk.
+
+This installer adds RustDeskHop for your current Windows account, creates a
+Start Menu shortcut, and registers an uninstaller. Startup and desktop
+shortcuts are optional. No administrator rights are requested.
+
+Exit RustDeskHop from its tray menu before upgrading. Leave RustDesk running.
+The installer does not install, configure, stop or uninstall RustDesk and
+does not modify saved computers, network profiles or credentials.
+
+RustDeskHop has no telemetry. Requested connections can probe your configured
+server and launch RustDesk. See the installed PRIVACY.md for details.
+
+Original project code is GPL-3.0-only. The complete license, third-party
+notices and matching-source download information are included. There is no
+purchase, subscription, or additional license agreement required.
+
+Uninstall through Windows Installed apps. Settings and recovery backups are
+retained deliberately so reinstalling does not lose your configuration.
