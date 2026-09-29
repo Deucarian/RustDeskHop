@@ -25,6 +25,15 @@ jobs:
       - name: Test RustDesk routing and recovery logic
         run: dotnet test tests\RustDeskHop.Tests\RustDeskHop.Tests.csproj --configuration Release
 
+      - name: Resolve release version
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+            throw "Invalid release version: $version"
+          }
+          "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+
       - name: Publish self-contained Windows build
         run: >-
           dotnet publish RustDeskCompanion.csproj
@@ -35,6 +44,7 @@ jobs:
           --property:IncludeNativeLibrariesForSelfExtract=true
           --property:DebugType=None
           --property:DebugSymbols=false
+          --property:Version=${{ env.RELEASE_VERSION }}
           --output publish
 
       - name: Create versioned release files
