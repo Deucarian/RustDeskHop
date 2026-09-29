@@ -46,13 +46,13 @@ jobs:
         run: |
           $branch = "${{ github.head_ref || github.ref_name }}"
           $branch = $branch -replace '[^A-Za-z0-9._-]', '-'
-          $archive = "rustdesk-network-companion-$branch-${{ github.run_number }}.zip"
+          $archive = "RustDeskHop-$branch-${{ github.run_number }}.zip"
           Compress-Archive -Path publish\* -DestinationPath $archive
 
       - name: Upload build artifact
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: rustdesk-network-companion-${{ github.ref_name }}-${{ github.run_number }}
-          path: rustdesk-network-companion-${{ github.ref_name }}-${{ github.run_number }}.zip
+          name: RustDeskHop-${{ github.ref_name }}-${{ github.run_number }}
+          path: RustDeskHop-${{ github.ref_name }}-${{ github.run_number }}.zip
           retention-days: 30
