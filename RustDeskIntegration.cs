@@ -128,13 +128,17 @@ internal static class RustDeskPublicProfileSetup
 
     public static bool TryHandleCommand(string[] args, out int exitCode)
     {
-        if (args.Length != 1 || !string.Equals(args[0], CommandName, StringComparison.OrdinalIgnoreCase))
+        if (args.Length == 0 || !string.Equals(args[0], CommandName, StringComparison.OrdinalIgnoreCase))
         {
             exitCode = 0;
             return false;
         }
 
-        var result = ApplyElevated();
+        // UAC can start the helper as a different administrator. Never silently edit
+        // that account's RustDesk settings instead of the requesting user's settings.
+        var result = args.Length == 2
+            ? ApplyElevated(args[1])
+            : new PublicSetupResult(false, "Start public sign-in preparation from RustDeskHop, not from the command line.");
         if (!result.Success)
         {
             MessageBox.Show(
@@ -164,6 +168,8 @@ internal static class RustDeskPublicProfileSetup
                 Verb = "runas",
             };
             startInfo.ArgumentList.Add(CommandName);
+            startInfo.ArgumentList.Add(WindowsIdentity.GetCurrent().User?.Value
+                ?? throw new InvalidOperationException("Windows could not identify the requesting account."));
 
             using var process = Process.Start(startInfo);
             if (process is null)
@@ -186,11 +192,22 @@ internal static class RustDeskPublicProfileSetup
         }
     }
 
-    private static PublicSetupResult ApplyElevated()
+    internal static bool IsSameWindowsUser(string? requestingSid, string? elevatedSid) =>
+        !string.IsNullOrWhiteSpace(requestingSid) && !string.IsNullOrWhiteSpace(elevatedSid)
+        && string.Equals(requestingSid, elevatedSid, StringComparison.Ordinal);
+
+    private static PublicSetupResult ApplyElevated(string requestingSid)
     {
         if (!IsAdministrator())
         {
             return new(false, "Administrator approval is required for installed RustDesk configuration.");
+        }
+
+        if (!IsSameWindowsUser(requestingSid, WindowsIdentity.GetCurrent().User?.Value))
+        {
+            return new(false, "Windows started setup as a different administrator. No RustDesk settings were changed. " +
+                "Ask your administrator to configure RustDesk's public service, then sign in to RustDesk from your own Windows account and retry. " +
+                "Normal RustDeskHop connections do not require administrator rights.");
         }
 
         var rustDeskPath = RustDeskLocator.Find();
@@ -199,22 +216,33 @@ internal static class RustDeskPublicProfileSetup
             return new(false, "RustDesk was not found in the usual installation locations.");
         }
 
+        return Prepare(RustDeskPaths.UserConfigPath, RustDeskPaths.ServiceConfigPath,
+            (name, value) => RunRustDeskOption(rustDeskPath, name, value));
+    }
+
+    // Explicit paths and a command runner allow tests to exercise the actual transaction
+    // without administrator approval, real RustDesk processes, or live configuration.
+    internal static PublicSetupResult Prepare(
+        string userConfigPath, string serviceConfigPath, Action<string, string> runOption)
+    {
         var optionNames = new[] { "custom-rendezvous-server", "relay-server", "api-server", "key" };
         var backups = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var originalOptions = optionNames.ToDictionary(name => name, _ => "", StringComparer.OrdinalIgnoreCase);
+        var originalOptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var attemptedOptions = new List<string>();
 
         try
         {
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
+            var timestamp = $"{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid():N}";
 
-            foreach (var configPath in new[] { RustDeskPaths.UserConfigPath, RustDeskPaths.ServiceConfigPath })
+            foreach (var configPath in new[] { userConfigPath, serviceConfigPath })
             {
-                if (!File.Exists(configPath))
-                {
-                    continue;
-                }
+                // File.Exists also returns false on access errors. Only genuinely absent
+                // files may be skipped; unreadable state must stop the preflight.
+                try { _ = File.GetAttributes(configPath); }
+                catch (FileNotFoundException) { continue; }
+                catch (DirectoryNotFoundException) { continue; }
 
-                var scope = string.Equals(configPath, RustDeskPaths.ServiceConfigPath, StringComparison.OrdinalIgnoreCase)
+                var scope = string.Equals(configPath, serviceConfigPath, StringComparison.OrdinalIgnoreCase)
                     ? "service"
                     : "user";
                 var backupDirectory = Path.Combine(
@@ -225,27 +253,31 @@ internal static class RustDeskPublicProfileSetup
                 File.Copy(configPath, backupPath, false);
                 backups[configPath] = backupPath;
 
-                var contents = File.ReadAllText(configPath);
+                // Read the captured snapshot, not a live file that may have changed since
+                // the backup. The installed service's snapshot takes precedence if present.
+                var contents = File.ReadAllText(backupPath);
                 foreach (var option in optionNames)
                 {
-                    var originalValue = RustDeskTomlEditor.ReadSetting(contents, option);
-                    if (originalValue is not null)
-                    {
-                        originalOptions[option] = originalValue;
-                    }
+                    originalOptions[option] = RustDeskTomlEditor.ReadSetting(contents, option) ?? "";
                 }
             }
+
+            if (backups.Count == 0)
+                return new(false, "No RustDesk configuration could be backed up. Open RustDesk once, then retry. No server settings were changed.");
 
             // RustDesk's supported management interface updates an installed client/service.
             // Clearing these options returns it to the built-in public rendezvous service.
             foreach (var option in optionNames)
             {
-                RunRustDeskOption(rustDeskPath, option, "");
+                // A failing command can still have partially applied. Include it in the
+                // rollback, but never issue rollback commands for untouched options.
+                attemptedOptions.Add(option);
+                runOption(option, "");
             }
 
             // Clear stale persisted values too. Some RustDesk versions leave the effective
             // top-level rendezvous server behind even after the visible option is changed.
-            foreach (var configPath in new[] { RustDeskPaths.UserConfigPath, RustDeskPaths.ServiceConfigPath })
+            foreach (var configPath in backups.Keys)
             {
                 ClearConfigFile(configPath);
             }
@@ -254,25 +286,30 @@ internal static class RustDeskPublicProfileSetup
         }
         catch (Exception ex)
         {
-            var restored = RestoreOriginalConfiguration(rustDeskPath, backups, originalOptions);
+            if (attemptedOptions.Count == 0)
+                return new(false, $"RustDesk configuration could not be backed up: {ex.Message} No server settings were changed.");
+
+            var restored = RestoreOriginalConfiguration(runOption, backups, originalOptions, attemptedOptions);
+            var backupLocations = string.Join(", ", backups.Values.Select(Path.GetDirectoryName).Distinct());
             var recoveryMessage = restored
                 ? "The previous RustDesk configuration was restored."
-                : "Automatic restore was incomplete; untouched backup files remain in RustDeskHop's application-data folder.";
+                : $"Automatic restore was incomplete. Backup files remain in: {backupLocations}";
             return new(false, $"RustDesk public setup failed: {ex.Message} {recoveryMessage}");
         }
     }
 
     private static bool RestoreOriginalConfiguration(
-        string rustDeskPath,
+        Action<string, string> runOption,
         IReadOnlyDictionary<string, string> backups,
-        IReadOnlyDictionary<string, string> originalOptions)
+        IReadOnlyDictionary<string, string> originalOptions,
+        IReadOnlyList<string> attemptedOptions)
     {
         var restored = true;
-        foreach (var backup in backups)
+        foreach (var option in attemptedOptions.Reverse())
         {
             try
             {
-                File.Copy(backup.Value, backup.Key, true);
+                runOption(option, originalOptions[option]);
             }
             catch
             {
@@ -280,11 +317,13 @@ internal static class RustDeskPublicProfileSetup
             }
         }
 
-        foreach (var option in originalOptions)
+        // Management commands can rewrite both files. Restore their distinct snapshots
+        // last, so restoring service options cannot overwrite the user's original values.
+        foreach (var backup in backups)
         {
             try
             {
-                RunRustDeskOption(rustDeskPath, option.Key, option.Value);
+                File.Copy(backup.Value, backup.Key, true);
             }
             catch
             {
@@ -322,11 +361,6 @@ internal static class RustDeskPublicProfileSetup
 
     private static void ClearConfigFile(string path)
     {
-        if (!File.Exists(path))
-        {
-            return;
-        }
-
         var original = File.ReadAllText(path);
         var updated = RustDeskTomlEditor.ClearCustomServer(original);
         if (string.Equals(original, updated, StringComparison.Ordinal))

@@ -1,19 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>RustDeskHop</AssemblyName>
+    <Product>RustDeskHop</Product>
+    <Description>Independent open-source network companion for RustDesk</Description>
     <RootNamespace>Simultria.RustDeskCompanion</RootNamespace>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
     <BrandingSource>$(MSBuildProjectDirectory)\Assets\RustDeskHop.svg</BrandingSource>
   </PropertyGroup>
   <ItemGroup>
-    <None Update="settings.local.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="settings.local.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
     <None Update="LICENSE;README.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Update="Assets\RustDeskHop.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Update="THIRD-PARTY-NOTICES.md;PRIVACY.md;SECURITY.md;CONTRIBUTING.md;docs\**\*" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
   <Target Name="GenerateApplicationBranding"
           Inputs="$(BrandingSource);$(MSBuildProjectDirectory)\tools\Build-ApplicationIcon.ps1;$(MSBuildProjectDirectory)\tools\BrandingRenderer\Program.cs;$(MSBuildProjectDirectory)\tools\BrandingRenderer\BrandingRenderer.csproj"

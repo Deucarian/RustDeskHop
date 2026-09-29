@@ -10,6 +10,32 @@ namespace RustDeskHop.Tests;
 public sealed class ModernUiTests
 {
     [Fact]
+    public void RenderDocumentationPreviewWithFictionalData() => OnSta(() =>
+    {
+        var output = Environment.GetEnvironmentVariable("RUSTDESKHOP_PREVIEW_DIRECTORY");
+        if (string.IsNullOrWhiteSpace(output)) return;
+        Directory.CreateDirectory(output);
+        var settings = Settings(3);
+        settings.Targets[0].Name = "Home computer";
+        settings.Targets[1].Name = "Studio workstation";
+        settings.Targets[2].Name = "Travel laptop";
+        settings.Profiles[0].Name = "RustDesk Public";
+        settings.Profiles[1].Name = "Example private network";
+        using var form = new MainForm(settings);
+        Load(form);
+        form.Show();
+        Application.DoEvents();
+        Find<Label>(form, "CurrentNetwork").Text = "RustDesk default: Public (example)";
+        form.PerformLayout();
+        form.Refresh();
+        var content = Assert.Single(form.Controls.Cast<Control>());
+        using var bitmap = new Bitmap(content.Width, content.Height);
+        content.DrawToBitmap(bitmap, content.ClientRectangle);
+        bitmap.Save(Path.Combine(output, "dashboard.png"), System.Drawing.Imaging.ImageFormat.Png);
+        Assert.True(bitmap.Width >= 700);
+    });
+
+    [Fact]
     public void EmptyListHasClearGuidanceAndDisabledActions() => OnSta(() =>
     {
         using var form = new MainForm(Settings(0));

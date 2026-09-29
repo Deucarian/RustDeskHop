@@ -6,6 +6,17 @@
 
 RustDeskHop is a free, open-source, independent companion for RustDesk, licensed under [GNU GPLv3](LICENSE) (`GPL-3.0-only`). It is not affiliated with or endorsed by the RustDesk project.
 
+**Public testing, not a broad production-readiness claim.** Everyone is welcome to test, [report bugs or request features](https://github.com/Deucarian/RustDeskHop/issues/new/choose), and contribute. Read the [remaining validation and known limitations](docs/TESTING.md). Signing enrollment and branding clearance are still pending; current downloads are unsigned. See the [code signing policy](docs/CODE_SIGNING.md), [branding record](docs/BRANDING.md) and [privacy policy](PRIVACY.md). Do not disable Windows security to run a download.
+
+## Quick start
+
+1. Use **Windows 11 x64** with a separately installed RustDesk. Other operating systems/architectures are not supported by this companion release; a .NET installation is not needed for self-contained downloads.
+2. Open [Releases](https://github.com/Deucarian/RustDeskHop/releases). Prefer the versioned **installer** or **portable ZIP** from the same release. Installer support is introduced by the readiness changes; old releases do not gain it retroactively.
+3. The installer creates a Start Menu shortcut for your account. Startup/desktop shortcuts are optional and default off. It does not install or stop RustDesk. Choose your install directory during setup.
+4. In RustDeskHop, use **Manage networks**, then **Add computer**, then select a computer and **Connect**. Have a working private-network/VPN route when needed.
+
+Exit RustDeskHop from its tray menu before upgrading; leave RustDesk running. Uninstall via Windows **Installed apps**. Settings and backups are retained. For a portable ZIP, exit the companion, remove only the extracted app folder and any shortcuts you created; retained settings are described below. Never remove RustDesk's own folders as part of companion uninstall.
+
 RustDesk is excellent at connecting to devices, but it becomes awkward when one operator regularly uses more than one RustDesk network—for example, RustDesk's public network and a private self-hosted server.
 
 This companion app provides a simple client-and-network launcher:
@@ -61,6 +72,10 @@ After those one-time steps, future connections should require only selecting the
 
 ### The desktop interface
 
+![RustDeskHop dashboard with fictional sample computers](docs/images/dashboard.png)
+
+*Production controls rendered with fictional data at 100% scaling; this preview is not evidence of a live connection.*
+
 The light interface puts the computer list and connection actions in one rounded frame. **Connect** is the single blue primary action; **Add computer**, **Remove**, and **Manage networks** are quieter maintenance actions. A soft selection and neutral Public/Private badges keep the focus on the chosen computer. Default-network information sits in the muted footer. Arrow keys move through the computer list; Enter connects. Longer names wrap and longer lists scroll.
 
 The rabbit icon stays in the title bar and taskbar, without a second oversized logo in the content. All windows use real Windows caption controls (minimize, maximize/restore, close), native resizing, snapping and the system menu—not text-symbol imitations. On Windows 11, the title bar blends into the app's light canvas using [Windows' supported caption-colour attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute); older Windows versions retain standard system chrome, and high-contrast mode retains system caption colours. Network settings and the add-computer dialog share the same styling. These presentation changes do not change RustDesk routing or close existing sessions.
@@ -94,14 +109,36 @@ On first run, use **Manage networks** and **Add computer** to configure the prof
 
 The public repository intentionally contains only generic defaults. A developer-specific `settings.local.json` may be placed beside the project file; it is ignored by Git and copied to the build output for local development.
 
+Developer seed files are explicitly excluded from `dotnet publish`. Distribution validation rejects settings/TOML files, private-key containers and test-only assemblies.
+
+Opening RustDeskHop does not rewrite your settings. If the file is damaged or unreadable, the app warns you and shows temporary default profiles while leaving the original untouched. An explicit save must first preserve a damaged file in `Settings Backups` beside `settings.json`; if the backup or save fails, the original is kept and the app reports the failure. Restore or repair the original before saving if you want to recover its saved computers.
+
+Public sign-in preparation also requires successful RustDesk configuration backups before it sends any server-setting commands. If a later step fails, it attempts to restore only the options it tried to change, then restores the original user/service files. An incomplete restore reports the actual backup locations.
+
+If UAC starts preparation as a different administrator, the helper refuses to change configuration. Ask an administrator to configure RustDesk, then sign in from your own Windows account. Routine outgoing connections require no elevation. Public preparation is not a harmless route switch: it can change incoming/default registration, so do not use it while relying on that private registration as your only access route.
+
+Private-server probes support DNS names, IPv4 and IPv6 (including `[IPv6]:port` server addresses). An explicit probe host overrides the server hostname, and **Probe port** remains the port used for the reachability check.
+
 ## Build
+
+Install the .NET 10 LTS SDK selected by `global.json`. No signing account, certificate, proprietary license, RustDesk artwork download, or paid tool is required to build from source.
 
 ```powershell
 dotnet build RustDeskCompanion.csproj -c Release
 dotnet test tests\RustDeskHop.Tests\RustDeskHop.Tests.csproj -c Release
 ```
 
-The executable is produced under `bin\Release\net9.0-windows\`.
+The executable is produced under `bin\Release\net10.0-windows\`.
+
+To build a self-contained distribution with notices:
+
+```powershell
+dotnet publish RustDeskCompanion.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output publish
+./tools/Collect-ReleaseNotices.ps1 -AssetsFile obj/project.assets.json -PublishDirectory publish
+./tools/Test-Publish.ps1 -PublishDirectory publish
+```
+
+For an installer, install the open-source Inno Setup compiler (6.4+), rerun the notice collector with `-InnoCompilerDirectory <compiler-folder>`, then run `./tools/Build-Installer.ps1 -PublishDirectory publish -OutputDirectory installer -Version <version> -Compiler <ISCC.exe-path>`. The installer script is public in `packaging/`; no additional EULA is imposed. CI runs install/upgrade/uninstall smoke tests only on disposable runners, never against your live installation.
 
 ### Application icon
 
@@ -123,9 +160,13 @@ To update an existing local installation, choose **Exit** from RustDeskHop's tra
 - Automated tests verify connection routing, RustDesk configuration detection, login detection, safe public-profile cleanup, and private-server probing.
 - Every push to either branch produces a self-contained Windows ZIP artifact in GitHub Actions.
 
+Builds also produce a per-user installer and test evidence. GitHub-hosted jobs validate the installed executable, shortcut behavior and uninstall data retention. Pinned workflow actions and dependency-update proposals help maintain the build chain. Tagged releases include provenance attestations, runtime notices, hashes and matching source. Stable releases fail closed until recorded branding/manual-validation gates and approved signing are enabled; unsigned opt-in prereleases remain possible. This does not restrict independent builds or forks.
+
 Because this is a desktop utility, the automated deployment target is a downloadable build artifact rather than a server. Version tags also publish permanent GitHub Releases, as described below.
 
 Feature ideas can be submitted through the repository's **Feature request** issue template.
+
+Use the **Bug report** template for reproducible defects. Anyone with a GitHub account can participate; no invitation is needed. See [CONTRIBUTING.md](CONTRIBUTING.md). Report security vulnerabilities [privately](https://github.com/Deucarian/RustDeskHop/security/advisories/new), not in public issues.
 
 ## Downloads
 
@@ -135,7 +176,9 @@ The latest public release is always available from the stable link below:
 
 Release files use versioned names such as `RustDeskHop-v0.1.0-win-x64.exe` and `RustDeskHop-v0.1.0-win-x64.zip`. Stable releases are created automatically when a version tag such as `v0.1.0` is pushed; tags such as `v0.1.0-beta.1` become prereleases.
 
-New releases include `LICENSE` and a matching `RustDeskHop-v<version>-source.zip` alongside the Windows downloads. The Windows ZIP also includes the license and this usage guide. Download the source archive from the same release as your executable to inspect, modify, or rebuild that version; the **Build** section above describes the build commands.
+New readiness-enabled releases include `LICENSE`, `RustDeskHop-v<version>-notices.zip`, `SHA256SUMS.txt` and a matching `RustDeskHop-v<version>-source.zip` alongside the Windows downloads. Installer/portable ZIP distributions include the notices, license and usage guide; standalone EXE users should retain the matching notices archive, especially when redistributing. Download the source archive from the same release as your executable to inspect, modify, or rebuild that version; the **Build** section above describes the build commands. Versioned names are retained even when navigating from the stable latest-release link.
+
+Verify a download with `Get-FileHash <file> -Algorithm SHA256` against the matching checksum file. For releases with attestations, use `gh attestation verify <file> --repo Deucarian/RustDeskHop`. A checksum detects changed bytes; provenance identifies the build; neither substitutes for reviewing code or a Windows publisher signature. See [Code signing policy](docs/CODE_SIGNING.md) for the exact status.
 
 ## License
 
@@ -145,4 +188,4 @@ You may use, study, modify, and redistribute RustDeskHop. If you distribute modi
 
 RustDeskHop is provided without warranty, including without any implied warranty of merchantability or fitness for a particular purpose, to the extent permitted by law.
 
-RustDesk is a separate application, is not bundled here, and remains under [its own license](https://github.com/rustdesk/rustdesk/blob/master/LICENCE). Third-party dependencies retain their respective licenses. RustDesk's name and logo are not licensed by this repository, and RustDeskHop does not claim affiliation with or endorsement by RustDesk.
+RustDesk is a separate application, is not bundled here, and remains under [its own license](https://github.com/rustdesk/rustdesk/blob/master/LICENCE). Third-party dependencies retain their respective licenses; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the resolved runtime notices in downloads. RustDesk's name and logo are not licensed by this repository, and RustDeskHop does not claim affiliation with or endorsement by RustDesk. No logo-use permission or signing approval is implied by this license; see the open [branding gate](docs/BRANDING.md).

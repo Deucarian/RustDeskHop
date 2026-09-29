@@ -15,7 +15,7 @@ internal sealed partial class MainForm
     private readonly ModernButton profilesButton = new() { Name = "ManageNetworks", Text = "Manage networks", Quiet = true };
     private readonly Label emptyState = AppTheme.Label("No computers yet\nAdd your first computer to get started.", color: AppTheme.Muted);
     private AppSettings settings = null!;
-    private readonly bool saveLoadedSettings;
+    private string? settingsWarning;
     private bool connecting;
     private const string ReadyMessage = "Existing sessions stay open.";
 
@@ -24,7 +24,6 @@ internal sealed partial class MainForm
     internal MainForm(AppSettings? initialSettings)
     {
         settings = initialSettings!;
-        saveLoadedSettings = initialSettings is null;
         Text = "RustDeskHop";
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(740, 480);
@@ -32,9 +31,13 @@ internal sealed partial class MainForm
         BuildUi();
         Load += (_, _) =>
         {
-            settings ??= ConfigStore.Load();
-            if (saveLoadedSettings) ConfigStore.Save(settings);
+            settings ??= ConfigStore.Load(out settingsWarning);
             RefreshTargets();
+        };
+        Shown += (_, _) =>
+        {
+            if (settingsWarning is not null)
+                MessageBox.Show(this, settingsWarning, "Saved settings need attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         };
         Activated += (_, _) => RefreshNetworkStatus();
     }
