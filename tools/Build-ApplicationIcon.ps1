@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$Source = (Join-Path $PSScriptRoot '..\Assets\RustDeskHop.png'),
-    [string]$Destination = (Join-Path $PSScriptRoot '..\obj\branding\RustDeskHop.ico'),
+    [string]$Source,
+    [string]$Destination,
     [string]$LogoDestination,
     [ValidateRange(0, 0.2)]
     [double]$PaddingFraction = 0,
@@ -10,11 +10,30 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $Source) { $Source = Join-Path $PSScriptRoot '..\Assets\RustDeskHop.svg' }
+if (-not $Destination) { $Destination = Join-Path $PSScriptRoot '..\obj\branding\RustDeskHop.ico' }
 Add-Type -AssemblyName System.Drawing
+
+if ([System.IO.Path]::GetExtension($Source) -ieq '.svg') {
+    $brandingDirectory = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetFullPath($Destination))
+    $renderedMaster = Join-Path $brandingDirectory 'master.png'
+    $rendererArtifacts = Join-Path $brandingDirectory 'renderer'
+    & dotnet run --project (Join-Path $PSScriptRoot 'BrandingRenderer\BrandingRenderer.csproj') --configuration Release --artifacts-path $rendererArtifacts -- $Source $renderedMaster
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to render the SVG icon master.' }
+    $Source = $renderedMaster
+}
 
 # One master image supplies all outputs. Never write back to that master.
 if (-not ('RustDeskHopIconBounds' -as [type])) {
-    $drawingAssemblies = @([System.Drawing.Bitmap].Assembly.Location, [System.Drawing.Rectangle].Assembly.Location) | Select-Object -Unique
+    $drawingAssemblies = @(
+        [System.Drawing.Bitmap].Assembly.Location
+        [System.Drawing.Rectangle].Assembly.Location
+        [System.Drawing.Bitmap].GetInterfaces() | ForEach-Object { $_.Assembly.Location }
+        # PowerShell 7/.NET splits drawing interfaces and collection references
+        # into assemblies that Windows PowerShell's compiler included by default.
+        $collectionsReference = Join-Path $PSHOME 'ref\System.Collections.dll'
+        if (Test-Path -LiteralPath $collectionsReference) { $collectionsReference }
+    ) | Select-Object -Unique
     Add-Type -ReferencedAssemblies $drawingAssemblies -TypeDefinition @'
 using System;
 using System.Drawing;
@@ -28,9 +47,9 @@ public static class RustDeskHopIconBounds
         {
             var image = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
             using (var graphics = Graphics.FromImage(image)) graphics.DrawImageUnscaled(source, 0, 0);
-            // Accept either a transparent master or the approved white-tile
-            // preview on black. Only the connected exterior matte is decoded;
-            // the rabbit and the opaque tile interior are never recolored.
+            // Preserve the approved composite's white background, including its
+            // negative space. Transparent masters also pass through unchanged.
+            // Only the legacy white-tile preview's exterior black matte is decoded.
             foreach (var point in new[] { new Point(0, 0), new Point(image.Width - 1, 0),
                 new Point(0, image.Height - 1), new Point(image.Width - 1, image.Height - 1) })
             {
@@ -90,6 +109,7 @@ try {
     foreach ($size in $sizes) {
         $bitmap = [System.Drawing.Bitmap]::new($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
         $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        $attributes = [System.Drawing.Imaging.ImageAttributes]::new()
         $png = [System.IO.MemoryStream]::new()
         try {
             $graphics.Clear([System.Drawing.Color]::Transparent)
@@ -101,11 +121,20 @@ try {
             $width = $artBounds.Width * $scale
             $height = $artBounds.Height * $scale
             $target = [System.Drawing.RectangleF]::new(($size - $width) / 2, ($size - $height) / 2, $width, $height)
-            $graphics.DrawImage($sourceImage, $target, [System.Drawing.RectangleF]$artBounds, [System.Drawing.GraphicsUnit]::Pixel)
+            # Sample real edge pixels when downscaling an opaque master instead
+            # of introducing transparency around its white background.
+            $attributes.SetWrapMode([System.Drawing.Drawing2D.WrapMode]::TileFlipXY)
+            $targetPoints = [System.Drawing.PointF[]]@(
+                [System.Drawing.PointF]::new($target.Left, $target.Top),
+                [System.Drawing.PointF]::new($target.Right, $target.Top),
+                [System.Drawing.PointF]::new($target.Left, $target.Bottom)
+            )
+            $graphics.DrawImage($sourceImage, $targetPoints, [System.Drawing.RectangleF]$artBounds, [System.Drawing.GraphicsUnit]::Pixel, $attributes)
             $bitmap.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
             $frames.Add($png.ToArray())
         } finally {
             $png.Dispose()
+            $attributes.Dispose()
             $graphics.Dispose()
             $bitmap.Dispose()
         }
