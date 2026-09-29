@@ -172,7 +172,9 @@ public sealed class ModernUiTests
         foreach (var form in new Form[] { target, networks, signIn })
         {
             _ = form.Handle;
+            if (form is not PublicSignInForm) form.Show();
             form.PerformLayout();
+            Application.DoEvents();
             foreach (var field in Descendants(form).OfType<InputSurface>())
             {
                 Assert.True(field.Parent!.ClientRectangle.Contains(field.Bounds), $"Field exceeds editor: {field.Bounds}");
@@ -248,6 +250,127 @@ public sealed class ModernUiTests
         }
         Assert.True(name.Bottom <= route.Top);
     });
+
+    [Fact]
+    public void ComputerNamesAreEditedOnlyInsideManageNetworks() => OnSta(() =>
+    {
+        var settings = Settings(3);
+        using var dashboard = new MainForm(settings);
+        Load(dashboard);
+        Assert.Equal(new[] { "AddComputer", "Connect", "ManageNetworks", "RemoveComputer" },
+            Descendants(dashboard).OfType<ModernButton>().Select(b => b.Name).Order().ToArray());
+        using var form = new ProfilesForm(settings.Profiles, settings.Targets);
+        form.Show();
+        var sections = Find<TabControl>(form, "NetworkSections");
+        sections.SelectedIndex = 1;
+        Application.DoEvents();
+        var grid = Find<DataGridView>(form, "ComputerLabels");
+        Assert.Equal(2, grid.Rows.Count);
+        Assert.False(grid.Columns["ComputerName"]!.ReadOnly);
+        Assert.True(grid.Columns["RustDeskId"]!.ReadOnly);
+        EditName(grid, 0, "  Café workstation 🐇  ");
+        Find<ModernButton>(form, "SaveNetwork").PerformClick();
+        Assert.Equal("Café workstation 🐇", form.Targets[0].Name);
+        Assert.Equal("Computer 1", settings.Targets[0].Name);
+        Assert.Equal(settings.Targets.Select(t => (t.RustDeskId, t.ProfileId)), form.Targets.Select(t => (t.RustDeskId, t.ProfileId)));
+        Assert.Equal("Computer 2", form.Targets[1].Name);
+        using var temp = new TestDirectory();
+        var path = temp.FilePath("settings.json");
+        ConfigStore.Save(new AppSettings { Profiles = form.Profiles, Targets = form.Targets }, path);
+        var reloaded = ConfigStore.Load(path, null, out var warning);
+        Assert.Null(warning);
+        Assert.Equal("Café workstation 🐇", reloaded.Targets[0].Name);
+    });
+
+    [Fact]
+    public void SwitchingNetworkDoesNotApplyUnsavedLabelsToOtherComputers() => OnSta(() =>
+    {
+        var settings = Settings(3);
+        using var form = new ProfilesForm(settings.Profiles, settings.Targets);
+        form.Show();
+        Find<TabControl>(form, "NetworkSections").SelectedIndex = 1;
+        var grid = Find<DataGridView>(form, "ComputerLabels");
+        EditName(grid, 0, "Unsaved public name");
+        Find<ListBox>(form, "Networks").SelectedIndex = 1;
+        Application.DoEvents();
+        Assert.Single(grid.Rows.Cast<DataGridViewRow>());
+        Assert.Equal("Computer 2", grid.Rows[0].Cells[0].Value);
+        EditName(grid, 0, "Private workstation");
+        Find<ModernButton>(form, "SaveNetwork").PerformClick();
+        Find<ListBox>(form, "Networks").SelectedIndex = 0;
+        Assert.Equal("Computer 1", grid.Rows[0].Cells[0].Value);
+        Assert.Equal("Private workstation", form.Targets[1].Name);
+        Assert.Equal("Computer 1", form.Targets[0].Name);
+    });
+
+    [Fact]
+    public void BlankComputerNameRejectsAllLabelChanges() => OnSta(() =>
+    {
+        var settings = Settings(3);
+        using var form = new ProfilesForm(settings.Profiles, settings.Targets);
+        form.Show();
+        Find<TabControl>(form, "NetworkSections").SelectedIndex = 1;
+        var grid = Find<DataGridView>(form, "ComputerLabels");
+        EditName(grid, 0, "Valid but not saved");
+        grid.EndEdit();
+        EditName(grid, 1, "   ");
+        Assert.False(Find<ComputerLabelsEditor>(form, "ComputerLabelsEditor").TrySave(out var error));
+        Assert.Contains("needs a name", error);
+        Assert.Equal(settings.Targets.Select(t => t.Name), form.Targets.Select(t => t.Name));
+    });
+
+    [Fact]
+    public void ClosingWithoutSavingKeepsNamesAndEmptyNetworkExplainsItself() => OnSta(() =>
+    {
+        var settings = Settings(1);
+        using var form = new ProfilesForm(settings.Profiles, settings.Targets);
+        form.Show();
+        Find<TabControl>(form, "NetworkSections").SelectedIndex = 1;
+        EditName(Find<DataGridView>(form, "ComputerLabels"), 0, "Discard me");
+        form.Close();
+        Assert.Equal("Computer 1", form.Targets[0].Name);
+        Assert.Equal("Computer 1", settings.Targets[0].Name);
+        using var emptyForm = new ProfilesForm(settings.Profiles, settings.Targets);
+        emptyForm.Show();
+        Application.DoEvents();
+        Find<TabControl>(emptyForm, "NetworkSections").SelectedIndex = 1;
+        Find<ListBox>(emptyForm, "Networks").SelectedIndex = 1;
+        Assert.True(Find<Label>(emptyForm, "NoNetworkComputers").Visible);
+        Assert.False(Find<DataGridView>(emptyForm, "ComputerLabels").Visible);
+    });
+
+    [Theory]
+    [InlineData(780, 530)]
+    [InlineData(900, 580)]
+    [InlineData(1920, 1040)]
+    public void ComputerNameEditorFitsAndSupportsLongLists(int width, int height) => OnSta(() =>
+    {
+        var settings = Settings(60);
+        settings.Targets[0].Name = string.Concat(Enumerable.Repeat("A very long computer name with spaces ", 6));
+        using var form = new ProfilesForm(settings.Profiles, settings.Targets);
+        form.Show();
+        form.Size = new Size(width, height);
+        Find<TabControl>(form, "NetworkSections").SelectedIndex = 1;
+        Application.DoEvents();
+        var grid = Find<DataGridView>(form, "ComputerLabels");
+        Assert.Equal(30, grid.Rows.Count);
+        grid.CurrentCell = grid.Rows[29].Cells[0];
+        Application.DoEvents();
+        Assert.True(grid.Rows[0].Height > grid.RowTemplate.MinimumHeight, $"Long-name row: {grid.Rows[0].Height}, minimum: {grid.RowTemplate.MinimumHeight}, value: {grid.Rows[0].Cells[0].Value}");
+        Assert.Equal(29, grid.CurrentCell.RowIndex);
+        foreach (var control in new Control[] { grid, Find<ModernButton>(form, "SaveNetwork") })
+        for (var parent = control.Parent; parent is not null; parent = parent.Parent)
+            Assert.True(parent.ClientRectangle.Contains(parent.RectangleToClient(control.RectangleToScreen(control.ClientRectangle))));
+        Assert.True(grid.TabStop);
+    });
+
+    private static void EditName(DataGridView grid, int row, string value)
+    {
+        Application.DoEvents();
+        grid.CurrentCell = grid.Rows[row].Cells[0];
+        grid.BeginEdit(true);
+        Assert.IsAssignableFrom<TextBox>(grid.EditingControl).Text = value;
+    }
 
     private static void Load(MainForm form)
     {

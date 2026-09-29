@@ -1,5 +1,10 @@
 # TODO
 
+## Computer-label editing (2026-09-30)
+
+- [x] Keep renaming inside Manage networks: select a network, open Computer names, edit labels, then use the existing Save network and Close controls. No new dashboard buttons or context menus.
+- [x] Isolate label drafts, reject empty names, preserve IDs/routes and other networks, and cover persistence, discarded edits, empty networks and long lists. Live desktop save verified; current suite: 142 tests and 27 release-tool checks.
+
 ## Live-test findings (2026-09-29)
 
 - [x] Fix public outgoing authentication routing: RustDesk 1.4.9 strips the account token from `@public` connections. Use a bare ID only with a confirmed public default, keep explicit private routes, and prevent an unchanged cached token from auto-completing a fresh sign-in dialog. Covered by regression tests; live results are recorded in `docs/TESTING.md`.
