@@ -99,6 +99,7 @@ For reliable unattended incoming access, keep the RustDesk background service in
 - **Public connection asks for login:** complete or renew RustDesk's browser sign-in, then retry from RustDeskHop. A cached token is not proof that RustDesk's server accepts the account. The companion's sign-in dialog waits for a changed saved login, or lets you explicitly choose **Retry connection** after finishing; an unchanged cached token cannot automatically dismiss it.
 - **Private server is unreachable:** confirm the required VPN or Tailscale connection is active and the server is online.
 - **Password prompt appears:** enter the remote computer's password and choose RustDesk's remember option if desired.
+- **Rename a saved computer:** open **Manage networks**, select its network, and open **Computer names**. Edit the name, choose **Save network**, then **Close**. Unsaved edits are discarded when switching networks or closing. Only the RustDeskHop label changes; the RustDesk ID, route, remote hostname and saved authentication remain unchanged. No extra dashboard controls are needed.
 - **Wrong network is shown:** use **Manage networks** or edit the saved client assignment before connecting.
 
 ## Configuration

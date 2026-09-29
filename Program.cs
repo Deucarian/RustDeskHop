@@ -438,10 +438,10 @@ internal sealed partial class MainForm : BrandedForm
 
     private void ManageProfiles()
     {
-        using var dialog = new ProfilesForm(settings.Profiles);
+        using var dialog = new ProfilesForm(settings.Profiles, settings.Targets);
         if (dialog.ShowDialog(this) == DialogResult.OK)
         {
-            SaveSettings(new AppSettings { Profiles = dialog.Profiles, Targets = settings.Targets });
+            SaveSettings(new AppSettings { Profiles = dialog.Profiles, Targets = dialog.Targets });
         }
     }
 
@@ -549,17 +549,23 @@ internal sealed class ProfilesForm : BrandedForm
     private readonly TextBox probeHostBox = new();
     private readonly NumericUpDown probePortBox = new() { Minimum = 1, Maximum = 65535, Value = 21116 };
     private readonly List<ServerProfile> profiles;
+    private readonly ComputerLabelsEditor computerLabels = new();
     private int selectedIndex = -1;
 
     public List<ServerProfile> Profiles => profiles;
+    public List<TargetDefinition> Targets { get; }
 
-    public ProfilesForm(IEnumerable<ServerProfile> source)
+    public ProfilesForm(IEnumerable<ServerProfile> source, IEnumerable<TargetDefinition>? targets = null)
     {
         profiles = source.Select(Clone).ToList();
+        Targets = (targets ?? []).Select(t => new TargetDefinition
+        {
+            Name = t.Name, RustDeskId = t.RustDeskId, ProfileId = t.ProfileId,
+        }).ToList();
         Text = "Manage networks";
         StartPosition = FormStartPosition.CenterParent;
-        MinimumSize = new Size(780, 490);
-        ClientSize = new Size(860, 460);
+        MinimumSize = new Size(780, 530);
+        ClientSize = new Size(860, 500);
         WindowContent.Padding = new Padding(UiMetrics.SectionGap);
         var surface = new SurfacePanel { Padding = new Padding(UiMetrics.Inset) };
 
@@ -607,16 +613,15 @@ internal sealed class ProfilesForm : BrandedForm
         var editor = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(UiMetrics.Inset, 0, 0, 0),
+            Padding = Padding.Empty,
             ColumnCount = 2,
-            RowCount = 8,
+            RowCount = 7,
             GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
         };
         editor.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
         editor.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         for (var row = 0; row < 6; row++) editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         editor.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
         AddRow(editor, 0, "Profile name", nameBox);
         AddRow(editor, 1, "Server address", addressBox);
@@ -662,7 +667,7 @@ internal sealed class ProfilesForm : BrandedForm
         add.Dock = DockStyle.Bottom;
         newNetworkArea.Controls.Add(add);
         split.Panel1.Controls.Add(newNetworkArea);
-        var save = new ModernButton { Text = "Save network", Primary = true, AutoSize = true, Margin = Padding.Empty };
+        var save = new ModernButton { Name = "SaveNetwork", Text = "Save network", Primary = true, AutoSize = true, Margin = Padding.Empty };
         save.Click += (_, _) => SaveSelected();
         buttons.Controls.Add(save);
         var remove = new ModernButton { Text = "Delete", Quiet = true, AutoSize = true };
@@ -670,9 +675,24 @@ internal sealed class ProfilesForm : BrandedForm
         var close = new ModernButton { Text = "Close", Quiet = true, DialogResult = DialogResult.OK, AutoSize = true };
         buttons.Controls.Add(close);
         buttons.Controls.Add(remove);
-        editor.Controls.Add(buttons, 0, 7);
-        editor.SetColumnSpan(buttons, 2);
-        split.Panel2.Controls.Add(editor);
+        var sections = new TabControl { Name = "NetworkSections", AccessibleName = "Network sections", Dock = DockStyle.Fill, Font = AppTheme.Small, Margin = Padding.Empty };
+        var settingsPage = new TabPage("Network settings") { BackColor = Color.White, Padding = new Padding(UiMetrics.Gap) };
+        var computersPage = new TabPage("Computer names") { BackColor = Color.White, Padding = new Padding(UiMetrics.Gap) };
+        settingsPage.Controls.Add(editor);
+        computerLabels.Dock = DockStyle.Fill;
+        computersPage.Controls.Add(computerLabels);
+        sections.TabPages.AddRange([settingsPage, computersPage]);
+        var detail = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2,
+            Padding = new Padding(UiMetrics.Inset, 0, 0, 0), Margin = Padding.Empty,
+        };
+        detail.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        detail.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        detail.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        detail.Controls.Add(sections, 0, 0);
+        detail.Controls.Add(buttons, 0, 1);
+        split.Panel2.Controls.Add(detail);
 
         surface.Controls.Add(split);
         WindowContent.Controls.Add(surface);
@@ -680,7 +700,7 @@ internal sealed class ProfilesForm : BrandedForm
         {
             var scale = DeviceDpi / 96F;
             var width = Math.Min((int)(UiMetrics.ContentWidth * scale), WindowContent.ClientSize.Width - WindowContent.Padding.Horizontal);
-            var height = Math.Min((int)(460 * scale), WindowContent.ClientSize.Height - WindowContent.Padding.Vertical);
+            var height = Math.Min((int)(500 * scale), WindowContent.ClientSize.Height - WindowContent.Padding.Vertical);
             surface.SetBounds((WindowContent.ClientSize.Width - width) / 2, WindowContent.Padding.Top, width, height);
         };
         AcceptButton = save;
@@ -703,6 +723,7 @@ internal sealed class ProfilesForm : BrandedForm
         privateNetworkBox.Checked = profile.RequiresPrivateNetwork;
         probeHostBox.Text = profile.ProbeHost;
         probePortBox.Value = Math.Clamp(profile.ProbePort, 1, 65535);
+        computerLabels.LoadTargets(Targets.Where(t => t.ProfileId == profile.Id));
     }
 
     private void NewProfile()
@@ -718,6 +739,11 @@ internal sealed class ProfilesForm : BrandedForm
         if (string.IsNullOrWhiteSpace(nameBox.Text) || string.IsNullOrWhiteSpace(addressBox.Text))
         {
             MessageBox.Show(this, "Profile name and server address are required.", "Incomplete", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (!computerLabels.TrySave(out var error))
+        {
+            MessageBox.Show(this, error, "Computer name needed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
