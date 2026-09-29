@@ -18,6 +18,13 @@ Local .NET 10 regression run on 2026-09-29: 114 tests passed; 11 release-tool ch
 
 The optional-signing policy update expands the release-tool suite to 27 checks (passed locally on 2026-09-29). Isolated fixtures verify that stable releases can be unsigned when both evidence gates pass, that signing never substitutes for either gate, and that absent, malformed or non-boolean evidence is rejected. The real readiness flags are not modified by these tests.
 
+## Computer-label editing validation (2026-09-30)
+
+- 142 .NET tests and 27 release-tool checks passed locally. Added coverage for network-scoped label editing, Unicode/trimmed names, unchanged IDs and routes, persistence through ConfigStore, empty-name rejection without partial updates, discarded unsaved edits, empty networks and 60 saved computers.
+- The new editor is contained at 780×530, 900×580 and 1920×1040 in automated layout tests. Existing network-field containment and unchanged dashboard-control tests also pass.
+- Inspected both Manage networks sections on the live Windows desktop at the existing 100% scale. Edited a saved private computer's label, tabbed to the read-only ID, saved using the existing Save network button and closed the dialog. The dashboard showed the updated name. A before/after comparison confirmed that only that label changed; IDs, profile assignments and network definitions were preserved. Existing RustDesk processes remained running.
+- No additional high-DPI/mixed-monitor or authenticated connection checks are claimed for this label-only change. The readiness gates remain unchanged.
+
 ## Required hands-on checks (not yet complete)
 
 Use disposable test machines and a fallback route; never jeopardize the only connection to a remote host.
