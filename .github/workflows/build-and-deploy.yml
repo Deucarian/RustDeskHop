@@ -36,6 +36,8 @@ jobs:
           ./tools/Package-Release.ps1 -Version "0.0.0-ci.${{ github.run_number }}" -PublishDirectory publish -InstallerDirectory artifacts -OutputDirectory "$env:RUNNER_TEMP/release-validation"
           $assets = @(Get-ChildItem "$env:RUNNER_TEMP/release-validation" -File)
           if ($assets.Count -ne 8) { throw 'Expected eight versioned release assets including checksums, notices and source.' }
+          $releaseInfo = Get-Content "$env:RUNNER_TEMP/release-validation/RELEASE-INFO.txt" -Raw
+          if (!$releaseInfo.StartsWith('UNSIGNED BUILD:') -or $releaseInfo.Contains('UNSIGNED TEST BUILD:')) { throw 'Disclose unsigned status independently of stable/beta readiness.' }
       - name: Upload build and test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

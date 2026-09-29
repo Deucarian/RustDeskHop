@@ -2,11 +2,15 @@
 
 ## Current status
 
+**Signing is optional for both stable releases and prereleases. It is not a GPL requirement.** The earlier mandatory-signing release gate was a conservative project policy, not a licensing obligation, and has been removed. Keeping this a free hobby/community project does not require signing-service enrollment.
+
 **Not enrolled or approved; public downloads remain unsigned until a release explicitly states otherwise.** No RustDeskHop public signing identity or signing-service credentials have been configured. Local development certificates for unrelated projects are not used. GitHub build attestations are separate from Windows Authenticode signatures and do not remove SmartScreen warnings.
 
 Signing does not change the GPL-3.0-only license, charge users, restrict forks, or require a certificate to build the app. All build/installer scripts and matching source ship publicly. Do not disable Windows protection or install a self-signed certificate as a workaround.
 
-## Free open-source signing route
+Unsigned releases must disclose their status. Windows may warn or block them, especially on managed PCs or with Smart App Control; signing also does not guarantee that a new download avoids reputation warnings. See [Microsoft's guidance](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation). Test and report the actual download experience instead of promising universal compatibility.
+
+## Optional free open-source signing route
 
 The prepared workflow integrates [SignPath](https://docs.signpath.io/trusted-build-systems/github). The [SignPath Foundation application](https://signpath.org/apply.html) is subject to project review and approval, not an entitlement. No application or agreement has been submitted on the maintainer's behalf.
 
@@ -23,4 +27,4 @@ After acceptance, add the provider-required attribution to this policy and the R
 5. Test a prerelease end to end, then set `SIGNPATH_ENABLED=true`. The workflow uploads unsigned artifacts, waits for provider approval, downloads signed results and requires valid timestamped signatures. A signing failure stops publication; there is no unsigned fallback when enabled.
 6. Verify app and setup signatures on another Windows PC. The installer-generated uninstaller is not separately signed by this workflow. Confirm that packaging arrangement with the provider. Never advertise broader signing coverage than verified.
 
-Stable official releases additionally require the recorded manual-validation and branding gates in `release-readiness.json`. These protect official distribution, not contributors' freedom to build or fork. Release assets include hashes, provenance attestations, matching source and runtime notices. Previously published versions are never silently replaced.
+Stable official releases still require the recorded manual-validation and branding gates in `release-readiness.json`, whether signed or unsigned. Signing enrollment is not part of `manualValidationComplete`; signature verification becomes required only if signing is enabled. These checks protect official distribution, not contributors' freedom to build or fork. Release assets include hashes, provenance attestations, matching source and runtime notices. Previously published versions are never silently replaced.

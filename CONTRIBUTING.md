@@ -13,4 +13,6 @@ Do not commit machine settings, real device IDs, tokens, passwords, binary build
 
 Contributions to original project code/docs are under GPL-3.0-only. Keep existing notices and identify third-party material with its source and license. Do not claim rights to third-party trademarks. See [branding status](docs/BRANDING.md).
 
+Contributing does not assign copyright to the maintainer or to RustDesk. Future upstream collaboration is welcome, but any copyright assignment would require a separate agreement with the relevant rights holders. The project's promise of free official downloads is not a restriction on GPL-permitted commercial use or redistribution.
+
 Be respectful, assume good intent, and keep feedback specific and actionable. This is a volunteer project, not a support contract.
