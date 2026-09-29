@@ -1,0 +1,49 @@
+name: Bug report
+description: Help improve RustDeskHop with a reproducible problem report.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everyone is welcome to test and report problems; no tester invitation is needed.
+        Reports are public. Do not attach passwords, tokens, private server keys, real RustDesk IDs, or unredacted configuration/screenshots.
+        For a security vulnerability, use **Security → Report a vulnerability**, not this form.
+  - type: input
+    id: version
+    attributes:
+      label: RustDeskHop version and download type
+      placeholder: Version from the release page; installer, portable ZIP, or EXE
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows and RustDesk versions
+      placeholder: Windows edition/build, x64/ARM64, RustDesk version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include public/private routing, VPN status and display scaling if relevant. Use fictional device names and IDs.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted error text or screenshots
+      description: Never upload your complete settings.json or RustDesk TOML files.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, tokens, real device IDs and private network details.
+          required: true

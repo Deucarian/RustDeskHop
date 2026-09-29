@@ -1,99 +1,115 @@
 name: Release RustDeskHop
-
 on:
   push:
-    tags:
-      - 'v*.*.*'
-
+    tags: ['v*.*.*']
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   release:
-    name: release
-    runs-on: windows-latest
-
+    runs-on: windows-2025
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+      attestations: write
     steps:
-      - name: Check out tagged source
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          dotnet-version: 9.0.x
-
-      - name: Test RustDesk routing and recovery logic
-        run: dotnet test tests\RustDeskHop.Tests\RustDeskHop.Tests.csproj --configuration Release
-
-      - name: Resolve release version
+          fetch-depth: 0
+      - name: Validate version, source branch and public-readiness gates
         shell: pwsh
+        env:
+          SIGNING_ENABLED: ${{ vars.SIGNPATH_ENABLED }}
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
-          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
-            throw "Invalid release version: $version"
-          }
+          ./tools/Test-ReleaseGate.ps1 -Version $version -SigningEnabled $env:SIGNING_ENABLED
+          $branch = if ($version.Contains('-')) { 'develop' } else { 'main' }
+          git merge-base --is-ancestor HEAD "origin/$branch"
+          if ($LASTEXITCODE -ne 0) { throw "Release commit must already be merged into $branch" }
           "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
-
-      - name: Publish self-contained Windows build
-        run: >-
-          dotnet publish RustDeskCompanion.csproj
-          --configuration Release
-          --runtime win-x64
-          --self-contained true
-          --property:PublishSingleFile=true
-          --property:IncludeNativeLibrariesForSelfExtract=true
-          --property:DebugType=None
-          --property:DebugSymbols=false
-          --property:Version=${{ env.RELEASE_VERSION }}
-          --output publish
-
-      - name: Create versioned release files
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          global-json-file: global.json
+      - name: Test
+        run: dotnet test tests/RustDeskHop.Tests/RustDeskHop.Tests.csproj -c Release
+      - name: Publish
+        run: dotnet publish RustDeskCompanion.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -p:Version=${{ env.RELEASE_VERSION }} --output publish
+      - name: Collect notices from resolved runtime packages
+        shell: pwsh
+        run: ./tools/Collect-ReleaseNotices.ps1 -AssetsFile obj/project.assets.json -PublishDirectory publish -InnoCompilerDirectory "${env:ProgramFiles(x86)}\Inno Setup 6"
+      - name: Upload application for approved signing
+        id: unsigned-app
+        if: vars.SIGNPATH_ENABLED == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-application
+          path: publish/RustDeskHop.exe
+      - name: Sign application
+        if: vars.SIGNPATH_ENABLED == 'true'
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_APP_CONFIGURATION }}
+          github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-app
+      - name: Verify and use signed application
+        if: vars.SIGNPATH_ENABLED == 'true'
         shell: pwsh
         run: |
-          $tag = $env:GITHUB_REF_NAME
-          $version = $tag.TrimStart('v')
-          $exeName = "RustDeskHop-v$version-win-x64.exe"
-          $zipName = "RustDeskHop-v$version-win-x64.zip"
-          $sourceName = "RustDeskHop-v$version-source.zip"
-
-          Copy-Item "publish\RustDeskHop.exe" $exeName
-          Compress-Archive -Path "publish\*" -DestinationPath $zipName
-          git archive --format=zip --prefix="RustDeskHop-v$version/" --output=$sourceName HEAD
-          if ($LASTEXITCODE -ne 0) { throw 'Could not create matching source archive.' }
-
-          @($exeName, $zipName, $sourceName, 'LICENSE') | ForEach-Object {
-            $hash = (Get-FileHash $_ -Algorithm SHA256).Hash
-            "$hash  $_"
-          } | Set-Content SHA256SUMS.txt
-
-          "RELEASE_EXE=$exeName" >> $env:GITHUB_ENV
-          "RELEASE_ZIP=$zipName" >> $env:GITHUB_ENV
-          "RELEASE_SOURCE=$sourceName" >> $env:GITHUB_ENV
-
+          ./tools/Test-Signature.ps1 -Path signed-app/RustDeskHop.exe
+          Copy-Item signed-app/RustDeskHop.exe publish/RustDeskHop.exe -Force
+      - name: Build and smoke-test installer
+        shell: pwsh
+        run: |
+          ./tools/Build-Installer.ps1 -PublishDirectory publish -OutputDirectory installer -Version $env:RELEASE_VERSION
+          ./tools/Test-Installer.ps1 -Installer "installer/RustDeskHop-v$env:RELEASE_VERSION-win-x64-setup.exe"
+      - name: Upload installer for approved signing
+        id: unsigned-installer
+        if: vars.SIGNPATH_ENABLED == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-installer
+          path: installer/*.exe
+      - name: Sign installer
+        if: vars.SIGNPATH_ENABLED == 'true'
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_INSTALLER_CONFIGURATION }}
+          github-artifact-id: ${{ steps.unsigned-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-installer
+      - name: Verify and use signed installer
+        if: vars.SIGNPATH_ENABLED == 'true'
+        shell: pwsh
+        run: |
+          $name = "RustDeskHop-v$env:RELEASE_VERSION-win-x64-setup.exe"
+          ./tools/Test-Signature.ps1 -Path "signed-installer/$name"
+          Copy-Item "signed-installer/$name" "installer/$name" -Force
+      - name: Assemble immutable versioned assets
+        env:
+          SIGNING_ENABLED: ${{ vars.SIGNPATH_ENABLED }}
+        shell: pwsh
+        run: ./tools/Package-Release.ps1 -Version $env:RELEASE_VERSION -PublishDirectory publish -InstallerDirectory installer -OutputDirectory release -SigningEnabled $env:SIGNING_ENABLED
+      - name: Attest published release assets
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: release/*
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $tag = $env:GITHUB_REF_NAME
-          $releaseArgs = @(
-            'release', 'create', $tag,
-            $env:RELEASE_EXE,
-            $env:RELEASE_ZIP,
-            $env:RELEASE_SOURCE,
-            'LICENSE',
-            'SHA256SUMS.txt',
-            '--title', "RustDeskHop $tag",
-            '--notes', 'RustDeskHop is free and open source under GPL-3.0-only. The matching source code and build instructions are in the versioned source ZIP attached to this release. The Windows ZIP also includes the license and usage guide. RustDesk is installed separately.',
-            '--generate-notes'
-          )
-
-          if ($tag -match '-') {
-            $releaseArgs += '--prerelease'
-            $releaseArgs += '--latest=false'
-          }
-          else {
-            $releaseArgs += '--latest'
-          }
-
+          $files = @(Get-ChildItem release -File | Select-Object -ExpandProperty FullName)
+          $releaseArgs = @('release', 'create', $env:GITHUB_REF_NAME) + $files + @('--verify-tag', '--title', "RustDeskHop $env:GITHUB_REF_NAME", '--notes-file', 'release-notes.md', '--generate-notes')
+          if ($env:RELEASE_VERSION.Contains('-')) { $releaseArgs += @('--prerelease', '--latest=false') }
+          else { $releaseArgs += '--latest' }
           gh @releaseArgs
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }

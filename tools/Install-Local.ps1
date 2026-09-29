@@ -15,7 +15,9 @@ if (Get-Process -Name RustDeskHop -ErrorAction SilentlyContinue | Where-Object P
     throw 'Choose Exit from this installation of RustDeskHop''s tray menu before updating. Do not close RustDesk or its sessions.'
 }
 if (Test-Path -LiteralPath $BackupDirectory) { throw 'Use a fresh backup directory; existing backups are never overwritten.' }
-$files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'Assets\RustDeskHop.svg', 'LICENSE', 'README.md')
+& (Join-Path $PSScriptRoot 'Test-Publish.ps1') -PublishDirectory $publishPath
+$files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'Assets\RustDeskHop.svg', 'LICENSE', 'README.md', 'PRIVACY.md', 'THIRD-PARTY-NOTICES.md', 'docs\CODE_SIGNING.md', 'docs\BRANDING.md')
+$files += @(Get-ChildItem -LiteralPath (Join-Path $publishPath 'licenses') -File | ForEach-Object { 'licenses\' + $_.Name })
 foreach ($file in $files) {
     if (-not (Test-Path -LiteralPath (Join-Path $publishPath $file) -PathType Leaf)) { throw "Incomplete publish: $file" }
 }
