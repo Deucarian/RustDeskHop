@@ -14,6 +14,8 @@ Automated checks are evidence for specific behaviors, not a substitute for a hum
 
 Local .NET 10 regression run on 2026-09-29: 114 tests passed; 11 release-tool checks passed; the self-contained EXE's `--verify-install` check passed. The optional documentation preview renders production controls with fictional data, not a connected session. One available physical display is 1920×1080 at 100% scaling. Real 125/150/200% or mixed-monitor validation has not been performed. Record CI run links below when available.
 
+[Initial Windows CI evidence](https://github.com/Deucarian/RustDeskHop/actions/runs/36574951647): all 114 tests, publish/license validation, 11 release-tool checks, and installer/shortcut/upgrade/uninstall smoke checks passed on Windows Server 2025 with Inno Setup 6.7.1. Later changes must pass the same required check before merging; see the PR's latest run for its exact source revision.
+
 ## Required hands-on checks (not yet complete)
 
 Use disposable test machines and a fallback route; never jeopardize the only connection to a remote host.

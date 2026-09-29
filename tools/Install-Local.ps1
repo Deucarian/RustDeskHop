@@ -16,8 +16,9 @@ if (Get-Process -Name RustDeskHop -ErrorAction SilentlyContinue | Where-Object P
 }
 if (Test-Path -LiteralPath $BackupDirectory) { throw 'Use a fresh backup directory; existing backups are never overwritten.' }
 & (Join-Path $PSScriptRoot 'Test-Publish.ps1') -PublishDirectory $publishPath
-$files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'Assets\RustDeskHop.svg', 'LICENSE', 'README.md', 'PRIVACY.md', 'THIRD-PARTY-NOTICES.md', 'docs\CODE_SIGNING.md', 'docs\BRANDING.md')
+$files = @('RustDeskHop.exe', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'Assets\RustDeskHop.svg', 'LICENSE', 'README.md', 'PRIVACY.md', 'SECURITY.md', 'CONTRIBUTING.md', 'THIRD-PARTY-NOTICES.md')
 $files += @(Get-ChildItem -LiteralPath (Join-Path $publishPath 'licenses') -File | ForEach-Object { 'licenses\' + $_.Name })
+$files += @(Get-ChildItem -LiteralPath (Join-Path $publishPath 'docs') -File -Recurse | ForEach-Object { $_.FullName.Substring($publishPath.TrimEnd('\').Length + 1) })
 foreach ($file in $files) {
     if (-not (Test-Path -LiteralPath (Join-Path $publishPath $file) -PathType Leaf)) { throw "Incomplete publish: $file" }
 }

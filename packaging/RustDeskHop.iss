@@ -46,9 +46,11 @@ Source: "{#PublishDir}\RustDeskHop.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\PRIVACY.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#PublishDir}\SECURITY.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#PublishDir}\CONTRIBUTING.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\Assets\*"; DestDir: "{app}\Assets"; Flags: ignoreversion
-Source: "{#PublishDir}\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion
+Source: "{#PublishDir}\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#PublishDir}\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion
 
 [Icons]

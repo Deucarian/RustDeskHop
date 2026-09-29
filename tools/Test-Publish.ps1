@@ -2,7 +2,7 @@
 param([Parameter(Mandatory)][string]$PublishDirectory)
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $PublishDirectory).Path
-foreach ($name in @('RustDeskHop.exe', 'LICENSE', 'README.md', 'PRIVACY.md', 'THIRD-PARTY-NOTICES.md', 'Assets\RustDeskHop.svg', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'docs\CODE_SIGNING.md', 'docs\BRANDING.md', 'licenses\runtime-and-installer-inventory.json')) {
+foreach ($name in @('RustDeskHop.exe', 'LICENSE', 'README.md', 'PRIVACY.md', 'SECURITY.md', 'CONTRIBUTING.md', 'THIRD-PARTY-NOTICES.md', 'Assets\RustDeskHop.svg', 'Assets\RustDeskHop.ico', 'Assets\RustDeskHop.png', 'docs\CODE_SIGNING.md', 'docs\BRANDING.md', 'docs\TESTING.md', 'docs\images\dashboard.png', 'licenses\runtime-and-installer-inventory.json')) {
     if (!(Test-Path -LiteralPath (Join-Path $root $name) -PathType Leaf)) { throw "Missing distribution file: $name" }
 }
 $files = @(Get-ChildItem -LiteralPath $root -File -Recurse)
