@@ -31,7 +31,7 @@ Use disposable test machines and a fallback route; never jeopardize the only con
 | Previous/current RustDesk releases | Repeat routing/sign-in/recovery on explicitly recorded versions. Do not infer compatibility from argument construction. | Pending |
 | Same-account UAC | On an expendable setup, approve/cancel preparation; verify backups, correct account, expected default registration and recoverability. | Pending |
 | Different-admin UAC | Approve as a different account; helper must reject with no user or service configuration change. Then manually configure RustDesk as administrator and retry normal connection. | Pending |
-| 125%, 150%, 200%, mixed monitors | Minimum/default/maximized dashboard and editors; long labels, keyboard navigation, scrolling; move between differently scaled monitors. No clipping/inaccessible actions. | Pending |
+| 125%, 150%, 200%, mixed monitors | Minimum/default/maximized dashboard and editors; long labels, keyboard navigation, scrolling; move between differently scaled monitors. No clipping/inaccessible actions. | Partial: normal/maximized dashboard and networks plus Add computer inspected at 125/150%; refresh-layout defect fixed and retested. 200%, minimum-size/long-label matrix and mixed monitors remain pending. |
 | Branding | Keep the approved logo and record status in BRANDING.md. Do not contact RustDesk; the maintainer cancelled outreach. | Unresolved; no permission or endorsement claimed |
 
 Record tester, date, OS build, scale, exact app/RustDesk versions, result and redacted evidence for every row. Bugs go through the issue form; exploitable issues go through private security reporting. Only mark `manualValidationComplete` after the hands-on checks pass; branding permission is tracked separately by `brandingCleared`. Anyone can contribute evidence; no tester registration is required.
@@ -60,6 +60,17 @@ The earlier rejection was caused by the outgoing target format, not demonstrated
 - **Existing access preserved:** the original incoming session still displayed Connected after the successful outgoing attempt. Its process and RustDesk's other processes were not stopped or restarted. Its status window was restored to its previous minimized state after inspection.
 - **Settings preserved:** saved companion settings and `RustDesk2.toml` retained their pre-test SHA-256 hashes. No claim is made that RustDesk's transient local/session state remained unchanged.
 - **Still pending:** authenticated private/public round trip, real high-DPI/mixed-monitor checks, clean-user installation and the other manual rows above. The changed sign-in dialog was covered by automated layout/state checks; the successful live connection reused RustDesk's existing account rather than exercising a fresh browser login. No readiness flag was changed.
+
+## Display-scaling pass and refresh-layout correction — 2026-09-29
+
+Windows Settings was made available by the maintainer. On this laptop's 1920×1080 display, the original setting was 100%. Temporarily applied 125%, then 150%, and restored 100%. After installing the layout correction, repeated the failing workflow at 150% and restored 100% again; Settings visibly confirmed the restored value. The normal scaling menu exposed 100%, 125%, 150% and 175%, not 200%. Custom scaling, sign-out and resolution changes were not attempted.
+
+- **125%:** inspected normal/maximized dashboard, normal/maximized network editor and Add computer. Labels/actions were readable; Tab moved from Name to RustDesk ID, and Escape cancelled the Add dialog. The attempted dashboard resize did not establish a minimum-size result.
+- **150%:** the same normal/maximized surfaces and Add computer were readable, but returning from network management collapsed the grid to one visible row despite space for all three. This is a binding/layout defect, not proof of a DPI-only bug: a regression test reproduced it at 100%, with a 208-pixel content height incorrectly displayed in a 100-pixel grid.
+- **Correction:** invalidate the cached content-height notification after rebinding, then measure through the existing deferred sizing path. No design or routing change. The previously failing regression now passes, as do all 135 .NET tests and 27 release-tool checks.
+- **Live retest:** installed `0.1.1-local.layout.20260929` with a recoverable backup, restarted only the companion, switched to 150%, opened and closed Manage networks, and confirmed all three rows remained visible. Returned to 100%. Companion settings and `RustDesk2.toml` retained their original hashes throughout.
+- **Public/private status:** the public desktop opened again before the private attempt. The private route established an encrypted transport and requested its password while the public tab remained present. Authentication was left to the maintainer; no authenticated private/public round trip is claimed.
+- **Still pending:** 200%, mixed monitors, confirmed minimum-size/long-label/scrolling coverage at each DPI, fresh-login/UAC/cross-version checks and a clean standard-user installation. Keep both readiness flags false. Screenshots containing real machine/account identifiers are not included in the public repository.
 
 ## Optional signing follow-up
 

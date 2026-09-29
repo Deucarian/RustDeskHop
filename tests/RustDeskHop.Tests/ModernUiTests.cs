@@ -108,6 +108,25 @@ public sealed class ModernUiTests
     });
 
     [Fact]
+    public void RefreshingUnchangedComputersKeepsTheFullListVisible() => OnSta(() =>
+    {
+        using var form = new MainForm(Settings(3));
+        Load(form);
+        var grid = Find<ComputerGrid>(form, "Computers");
+        var refresh = typeof(MainForm).GetMethod("RefreshTargets", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var expectedHeight = grid.ContentHeight;
+        Assert.Equal(expectedHeight, grid.Height);
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            refresh.Invoke(form, null);
+            Application.DoEvents();
+            Assert.Equal(3, grid.Rows.Count);
+            Assert.Equal(expectedHeight, grid.ContentHeight);
+            Assert.Equal(expectedHeight, grid.Height);
+        }
+    });
+
+    [Fact]
     public void DashboardHasOnePrimaryActionAndOneSharedFrame() => OnSta(() =>
     {
         using var form = new MainForm(Settings(3));

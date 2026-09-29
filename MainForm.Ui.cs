@@ -207,7 +207,13 @@ internal sealed class ComputerGrid : DataGridView
             DefaultCellStyle = new DataGridViewCellStyle { Padding = new Padding(UiMetrics.ComputerTextInset, 8, UiMetrics.CellInset, 8), Font = AppTheme.Strong } });
         Columns.Add(new DataGridViewTextBoxColumn { Name = "RustDeskId", HeaderText = "RustDesk ID", DataPropertyName = "RustDeskId", FillWeight = 24, SortMode = DataGridViewColumnSortMode.NotSortable });
         Columns.Add(new DataGridViewTextBoxColumn { Name = "Network", HeaderText = "Network", DataPropertyName = "ProfileName", FillWeight = 38, SortMode = DataGridViewColumnSortMode.NotSortable });
-        DataBindingComplete += (_, _) => ScheduleRowSizing();
+        DataBindingComplete += (_, _) =>
+        {
+            // Rebinding briefly clears the rows and can lay out an empty grid.
+            // Notify the parent after measuring even if the final height is unchanged.
+            lastContentHeight = -1;
+            ScheduleRowSizing();
+        };
         ColumnWidthChanged += (_, _) => ScheduleRowSizing();
         SizeChanged += (_, _) => ScheduleRowSizing();
     }
