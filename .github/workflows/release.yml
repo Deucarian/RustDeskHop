@@ -99,7 +99,7 @@ jobs:
         shell: pwsh
         run: ./tools/Package-Release.ps1 -Version $env:RELEASE_VERSION -PublishDirectory publish -InstallerDirectory installer -OutputDirectory release -SigningEnabled $env:SIGNING_ENABLED
       - name: Attest published release assets
-        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: release/*
       - name: Publish GitHub Release
