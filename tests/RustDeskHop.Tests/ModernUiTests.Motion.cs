@@ -154,8 +154,17 @@ namespace RustDeskHop.Tests
                       typeof(Control).GetMethod("OnMouseMove", BindingFlags.Instance | BindingFlags.NonPublic)!
                           .Invoke(grid, [hover]);
                       Assert.Equal(Cursors.Hand, grid.Cursor);
-                      typeof(Control).GetMethod("OnMouseLeave", BindingFlags.Instance | BindingFlags.NonPublic)!
-                          .Invoke(grid, [EventArgs.Empty]);
+                      // Exercise a deliberate move onto an editable cell rather than depending on
+                      // the desktop cursor's position outside the grid after a synthetic MouseLeave.
+                      Rectangle name = grid.GetCellDisplayRectangle(0, 0, false);
+                      MouseEventArgs editable = new MouseEventArgs(MouseButtons.None,
+                                                                   0,
+                                                                   name.X + name.Width / 2,
+                                                                   name.Y + name.Height / 2,
+                                                                   0
+                                                                  );
+                      typeof(Control).GetMethod("OnMouseMove", BindingFlags.Instance | BindingFlags.NonPublic)!
+                          .Invoke(grid, [editable]);
                       Assert.Equal(Cursors.Default, grid.Cursor);
                   }
                  );
