@@ -18,6 +18,7 @@ namespace RustDeskHop.UI
         private int? _testingRow;
         private readonly Label _feedback = AppTheme.Label("", AppTheme.small, AppTheme.muted);
         private readonly ContentTransition _listTransition;
+        private NetworkEditorDraft? _activeDraft;
         #endregion
 
         #region Constructors and Destructors
@@ -40,15 +41,18 @@ namespace RustDeskHop.UI
         #endregion
 
         #region Methods
-        internal void LoadNetwork(ServerProfile? profile, List<TargetDefinition> targets)
+        internal void LoadNetwork(NetworkEditorDraft? draft, List<TargetDefinition> targets)
         {
-            // Switching networks discards unsaved edits, just like the network fields.
-            _grid.CancelEdit();
-            _profile = profile;
+            if (ReferenceEquals(_activeDraft, draft) && ReferenceEquals(_targets, targets))
+                return;
+
+            CaptureDraftView();
+            _activeDraft = draft;
+            _profile = draft?.Profile;
             _targets = targets;
-            _drafts = new NetworkComputerDrafts(profile?.Id ?? "", targets);
-            ShowFeedback("");
+            _drafts = draft?.Computers ?? new NetworkComputerDrafts("", []);
             RebuildRows(false);
+            RestoreDraftView();
         }
 
         internal bool TrySave(out string? error)
@@ -60,6 +64,8 @@ namespace RustDeskHop.UI
                 return false;
             }
             bool saved = _drafts.TrySave(_targets, out error);
+            if (saved)
+                RefreshSavedRows();
             ShowFeedback(error ?? "");
             return saved;
         }

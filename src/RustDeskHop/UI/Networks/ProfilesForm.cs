@@ -5,7 +5,7 @@ using RustDeskHop.Connections;
 
 namespace RustDeskHop.UI
 {
-    internal sealed class ProfilesForm : BrandedForm
+    internal sealed partial class ProfilesForm : BrandedForm
     {
         #region Constants and Fields
         private readonly HoverListBox _profileList = new HoverListBox();
@@ -32,6 +32,9 @@ namespace RustDeskHop.UI
         private SectionTabs _sections = null!;
         private readonly ContentTransition _networkTransition;
         private readonly ContentTransition _networkListTransition;
+        private readonly Dictionary<string, NetworkEditorDraft> _drafts = new Dictionary<string, NetworkEditorDraft>();
+        private NetworkEditorDraft? _activeDraft;
+        private bool _rebindingProfiles;
         #endregion
 
         #region Constructors and Destructors
@@ -330,34 +333,6 @@ namespace RustDeskHop.UI
         #endregion
 
         #region Methods
-        private void LoadSelected()
-        {
-            // Font/item-height changes can recreate the native list handle and raise selection events.
-            // That is layout, not a request to reload the network and discard its unsaved drafts.
-            if (IsApplyingUiScale)
-                return;
-
-            _networkTransition.Begin();
-            if (_profileList.SelectedIndex < 0 || _profileList.SelectedIndex >= _profiles.Count)
-            {
-                _selectedIndex = -1;
-                _computers.LoadNetwork(null, Targets);
-                _networkTransition.End();
-                return;
-            }
-
-            _selectedIndex = _profileList.SelectedIndex;
-            ServerProfile profile = _profiles[_selectedIndex];
-            _nameBox.Text = profile.Name;
-            _addressBox.Text = profile.ServerAddress;
-            _keyBox.Text = profile.PublicKey;
-            _privateNetworkBox.Checked = profile.RequiresPrivateNetwork;
-            _probeHostBox.Text = profile.ProbeHost;
-            _probePortBox.Value = Math.Clamp(profile.ProbePort, 1, 65535);
-            _computers.LoadNetwork(profile, Targets);
-            _networkTransition.End();
-        }
-
         private void NewProfile()
         {
             ServerProfile profile = new ServerProfile
@@ -396,6 +371,7 @@ namespace RustDeskHop.UI
             profile.RequiresPrivateNetwork = _privateNetworkBox.Checked;
             profile.ProbeHost = _probeHostBox.Text.Trim();
             profile.ProbePort = (int)_probePortBox.Value;
+            CaptureNetworkFields();
             RebindProfiles(_selectedIndex);
         }
 
@@ -465,26 +441,9 @@ namespace RustDeskHop.UI
                 != DialogResult.Yes)
                 return;
 
+            _drafts.Remove(_profiles[_selectedIndex].Id);
             _profiles.RemoveAt(_selectedIndex);
             RebindProfiles(_profiles.Count > 0 ? Math.Min(_selectedIndex, _profiles.Count - 1) : -1);
-        }
-
-        private void RebindProfiles(int index)
-        {
-            _networkListTransition.Begin();
-            _profileList.BeginUpdate();
-            try
-            {
-                _profileList.DataSource = null;
-                _profileList.DisplayMember = nameof(ServerProfile.Name);
-                _profileList.DataSource = _profiles;
-                _profileList.SelectedIndex = index >= 0 && index < _profiles.Count ? index : -1;
-            }
-            finally
-            {
-                _profileList.EndUpdate();
-            }
-            _networkListTransition.End(true);
         }
 
         private static ServerProfile Clone(ServerProfile p) => new ServerProfile()

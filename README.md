@@ -54,9 +54,9 @@ Public outgoing connections require RustDesk's default network to be public. Rus
 For normal day-to-day use:
 
 1. Open **RustDeskHop**.
-2. Select the computer you want to reach.
+2. Find the computer you want to reach.
 3. Check that the displayed network is the one you expect.
-4. Click **Connect** (or press Enter while the computer list is focused).
+4. Click its **Connect** button, or use Tab to focus it and press Enter or Space.
 5. Approve the route confirmation if one appears.
 
 That is the complete switching workflow. RustDeskHop routes the new connection through the network assigned to that computer. You do not need to edit RustDesk's server settings, restart RustDesk, or manually switch between public and private servers. Existing sessions on other networks stay open.
@@ -79,11 +79,11 @@ After those one-time steps, click **Connect** beside the computer you want to op
 
 *Production controls rendered with fictional data at the fixed 90% interface density and 100% Windows display scaling; this preview is not evidence of a live connection.*
 
-The main screen is a flat computer list with no title or column headings: each name sits above its muted RustDesk ID, with the saved network and solid-blue **Connect** button on the same row. Thin dividers separate computers. **Manage computers & networks** is an outlined blue-text button at the bottom right, with a small settings symbol inside it. There is no separate selection panel or routine status footer. Arrow keys move through the list; Enter connects the current row, and Space activates a focused Connect button. Longer names wrap and longer lists scroll.
+The main screen is a flat computer list with no title or column headings: each name sits above its muted RustDesk ID, with the saved network and solid-blue **Connect** button on the same row. Thin dividers separate computers. **Manage computers & networks** is an outlined blue-text button at the bottom right, with a small settings symbol inside it. Rows do not stay selected, and clicking or double-clicking a computer name does not connect. Use its **Connect** button. Tab/Shift+Tab move between Connect buttons and the management action; arrow keys navigate the list, and Enter or Space activates the focused connection. Hover feedback is temporary and keyboard focus stays visible on the button. Longer names wrap and longer lists scroll.
 
 ![Computer management with fictional sample data](docs/images/management.png)
 
-Management has a quiet network sidebar and a blue-outlined **Computers / Network settings** selector matching the row's Test action. The selected tab has a pale-blue fill. Saved computers use the same grouped name-and-ID layout; new computers get inline name and ID fields. Test and Remove stay beside their own computer, with **+ Add computer** as the final row. Each window keeps a fixed size; longer lists scroll inside it. Both previews use production controls and fictional data, not live remote sessions.
+Management has a quiet network sidebar and **Computers / Network settings** page tabs in one continuous, full-width strip. A shared frame with rounded outer corners joins both tabs; a blue underline identifies the active page. The blue text and hover feedback use the Test action's palette. Their tab roles, visible keyboard focus, arrow-key navigation and Ctrl+Tab shortcuts remain available. Saved computers use the same grouped name-and-ID layout; new computers get inline name and ID fields. Test and Remove stay beside their own computer, with **+ Add computer** as the final row. Each window keeps a fixed size; longer lists scroll inside it. Both previews use production controls and fictional data, not live remote sessions.
 
 The interface uses the former slider's **90%** size as its fixed design density. The experimental slider is removed, and old saved slider values are ignored without rewriting settings at startup. Windows display scaling still applies independently. Windows cannot be manually resized or maximized; their matching minimum/maximum sizes keep the layout consistent. Unsaved computer/network edits remain drafts until **Save network**.
 
@@ -119,7 +119,7 @@ For reliable unattended incoming access, keep the RustDesk background service in
 - **Private server is unreachable:** confirm the required VPN or Tailscale connection is active and the server is online.
 - **Password prompt appears:** enter the remote computer's password and choose RustDesk's remember option if desired.
 - **Add, rename or remove a saved computer:** open **Manage computers & networks**, select its network, and open **Computers**. Choose the **+ Add computer** row to insert a computer, enter its name and RustDesk ID, edit an existing name, or choose **Remove** on the relevant row. A new row's ID is editable; saved IDs stay read-only. Choose **Save network**, then **Close**. Add automatically uses the selected network; you do not choose it again. Pasted numeric IDs with spaces are normalized. Missing names/IDs, connection links and new duplicate IDs are rejected inline. Removing an entry does not uninstall RustDesk or disconnect a session.
-- **Unsaved edits:** adding, renaming and removing are drafts until **Save network**. Switching networks or closing discards unsaved drafts. Renaming changes only the RustDeskHop label, not the ID, route, remote hostname or saved authentication.
+- **Unsaved edits:** adding, renaming, removing and network-field changes remain drafts until **Save network**. Switching tabs or networks keeps each network's draft while management stays open; clicking the already-selected network does not reload it. Saving applies only to the selected network, without resetting its computer list or saving other networks' drafts. Closing management still discards anything not saved, so choose **Save network** for each edited network before closing. Renaming changes only the RustDeskHop label, not the ID, route, remote hostname or saved authentication.
 - **Wrong network is shown:** add the computer under its correct network, save, then remove the old entry from the previous network and save again. An ID can exist in different networks, but Add rejects duplicates within one network. Remove and save a network's computers before deleting that network.
 
 ## Configuration
@@ -231,7 +231,9 @@ Use the **Bug report** template for reproducible defects. Anyone with a GitHub a
 
 ## Downloads
 
-The latest public release is always available from the stable link below:
+The current public-testing version is [RustDeskHop v0.1.1-beta.4](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.4), with the redesigned interface, preserved management drafts and sidebar flicker fix. Choose the versioned installer or portable ZIP on that release page. It remains an unsigned beta; the validation and branding limitations above still apply.
+
+GitHub's stable-release link below excludes beta releases and may therefore point to an older version:
 
 <https://github.com/Deucarian/RustDeskHop/releases/latest>
 

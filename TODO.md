@@ -1,5 +1,30 @@
 # TODO
 
+## Stop left network-list hover flicker (2026-10-06)
+
+- [x] Buffer complete owner-drawn rows and invalidate only changing visible rows without native background erasure; preserve native selection, scrolling and accessibility.
+- [x] Continue interrupted hover fades from their current values instead of flashing the outgoing item at full intensity.
+- [x] Pass 279 automated tests, including 10 targeted rendering/animation cases; inspect long-list labels, selection, scrolling and keyboard navigation in an isolated native preview.
+- [x] Pass 27 release-tool checks and the executable self-check, then restart only the installed companion with a verified backup, unchanged settings/branding and all four existing RustDesk processes preserved.
+
+## Preserve management drafts and view state (2026-10-06)
+
+- [x] Ignore repeated selection notifications for the active network instead of rebuilding its editor.
+- [x] Keep separate computer/network-field drafts while switching networks, including incomplete rows, feedback and computer scroll/current-cell position.
+- [x] Suppress transient rebinding events and save only the selected network; normalize newly saved IDs and make them read-only without replacing rows.
+- [x] Pass 269 automated tests, including repeated selection, cross-network draft isolation, partial entry, saving/rebinding, viewport restoration and unchanged close-without-save behavior.
+- [x] Verify the native click reproduction, pass 27 release-tool checks and the executable self-check, then update/restart the installed companion with a recoverable backup. Saved settings, logo and RustDesk sessions remain unchanged.
+
+## Clear page tabs and direct home-screen actions (2026-10-06)
+
+- [x] Publish the preceding fixed-size/motion version to develop through [PR #41](https://github.com/Deucarian/RustDeskHop/pull/41) after the required GitHub checks pass.
+- [x] Join the management tabs into one full-width strip with a shared frame, rounded outer corners, no gaps and a blue active-page underline. Keep the existing blue palette, hover feedback and keyboard navigation.
+- [x] Remove persistent home-screen row/cell selection and name double-click actions; retain temporary hover feedback and focus on Connect buttons.
+- [x] Keep keyboard connection access, forward/backward Tab navigation and exactly-once Enter/Space activation.
+- [x] Validate the unified tab strip with 261 tests and native screenshot/keyboard checks; fix arrow keys moving focus without selecting the page.
+- [x] Pass 254 tests, 27 release-tool checks and the packaged self-check; verify native Tab navigation/page switching and update/restart the installed companion with a backup, preserving settings, logo and existing RustDesk processes.
+- Publication requested for develop and main as `v0.1.1-beta.4`; required pull-request and tagged-release checks must pass before publication is complete. See [Releases](https://github.com/Deucarian/RustDeskHop/releases).
+
 ## Fixed 90% size and consistent motion (2026-10-06)
 
 - [x] Remove the experimental slider and saved scale preference; use the former 90% size as the shared design density without altering existing settings on startup.
@@ -10,7 +35,7 @@
 - [x] Pass 248 automated tests, including animation lifecycle, inline-editor focus, network-list identity and fixed-size regression coverage.
 - [x] Inspect native entry, keyboard navigation, simulated Test/save, network addition and final installed dashboard; pass 27 release-tool checks and the packaged self-check, then update/restart only RustDeskHop with a verified backup and unchanged settings/logo/RustDesk processes.
 - [ ] Repeat real high-DPI/mixed-monitor and small-work-area checks; the current-screen checks do not establish that matrix.
-- [ ] Publish this follow-up when requested; it is separate from the prior develop promotion.
+- [x] Publish the fixed-size/motion follow-up to develop through PR #41; main remains unchanged.
 
 ## Adjustable UI size and management tabs (2026-10-06)
 

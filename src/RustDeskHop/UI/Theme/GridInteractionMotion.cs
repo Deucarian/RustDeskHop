@@ -5,6 +5,7 @@ namespace RustDeskHop.UI.Theme
         #region Constants and Fields
         private readonly DataGridView _grid;
         private readonly Func<int, int, bool> _isAction;
+        private readonly Func<bool> _showFocus;
         private readonly MotionTween _tween;
         private readonly Dictionary<(int Row, int Column), float> _values = [];
         private Dictionary<(int Row, int Column), float> _from = [];
@@ -15,10 +16,11 @@ namespace RustDeskHop.UI.Theme
         #endregion
 
         #region Constructors and Destructors
-        internal GridInteractionMotion(DataGridView grid, Func<int, int, bool> isAction)
+        internal GridInteractionMotion(DataGridView grid, Func<int, int, bool> isAction, Func<bool>? showFocus = null)
         {
             _grid = grid;
             _isAction = isAction;
+            _showFocus = showFocus ?? (() => true);
             _tween = new MotionTween(Advance);
             grid.MouseMove += (_, e) =>
             {
@@ -62,7 +64,7 @@ namespace RustDeskHop.UI.Theme
                     if (_column >= 0)
                         targets[(_row, _column)] = _pressed && _isAction(_row, _column) ? 1 : .65F;
                 }
-                if (_grid.Focused && _grid.CurrentCell is DataGridViewCell cell)
+                if (_grid.Focused && _showFocus() && _grid.CurrentCell is DataGridViewCell cell)
                 {
                     (int Row, int Column) key = (cell.RowIndex, cell.ColumnIndex);
                     targets[key] = Math.Max(.65F, targets.GetValueOrDefault(key));
