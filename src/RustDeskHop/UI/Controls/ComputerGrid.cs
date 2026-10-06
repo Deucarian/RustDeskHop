@@ -15,11 +15,13 @@ namespace RustDeskHop.UI.Controls
         private bool _sizingScheduled;
         private int _lastContentHeight;
         private int? _openingRow;
+        private readonly GridInteractionMotion _motion;
         #endregion
 
         #region Constructors and Destructors
         public ComputerGrid()
         {
+            _motion = new GridInteractionMotion(this, (_, column) => Columns[column].Name == "Connect");
             DoubleBuffered = true;
             BorderStyle = BorderStyle.None;
             BackgroundColor = Color.White;
@@ -123,6 +125,13 @@ namespace RustDeskHop.UI.Controls
         #endregion
 
         #region Methods
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _motion.Dispose();
+            base.Dispose(disposing);
+        }
+
         internal void SetOpeningRow(int? index)
         {
             _openingRow = index;
@@ -217,7 +226,7 @@ namespace RustDeskHop.UI.Controls
                                             ),
                                CombineMode.Intersect
                               );
-            using (SolidBrush background = new SolidBrush(Rows[e.RowIndex].Selected ? AppTheme.selection : Color.White))
+            using (SolidBrush background = new SolidBrush(_motion.RowColor(e.RowIndex, Rows[e.RowIndex].Selected)))
                 e.Graphics.FillRectangle(background, e.RowBounds);
             for (int column = 0; column < Columns.Count; column++)
             {
@@ -335,7 +344,7 @@ namespace RustDeskHop.UI.Controls
             float scale = UiScale.Factor(this);
             int Px(float value) => (int)Math.Round(value * scale);
             bool selected = rowIndex >= 0 && Rows[rowIndex].Selected;
-            using SolidBrush background = new SolidBrush(selected ? AppTheme.selection : Color.White);
+            using SolidBrush background = new SolidBrush(_motion.RowColor(rowIndex, selected));
             graphics.FillRectangle(background, bounds);
             if (rowIndex < 0)
             {
@@ -383,8 +392,9 @@ namespace RustDeskHop.UI.Controls
                     graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     using GraphicsPath shape = AppTheme.Round(button, Px(7));
                     bool opening = _openingRow == rowIndex;
-                    using SolidBrush brush = new SolidBrush(Enabled ? AppTheme.blue : AppTheme.badge);
-                    using Pen outline = new Pen(Enabled ? AppTheme.blue : AppTheme.line);
+                    Color fill = UiMotion.ButtonFill(true, Enabled, _motion.Cell(rowIndex, columnIndex));
+                    using SolidBrush brush = new SolidBrush(fill);
+                    using Pen outline = new Pen(Enabled ? fill : AppTheme.line);
                     graphics.FillPath(brush, shape);
                     graphics.DrawPath(outline, shape);
                     TextRenderer.DrawText(graphics,

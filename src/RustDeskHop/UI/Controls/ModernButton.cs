@@ -7,13 +7,13 @@ namespace RustDeskHop.UI.Controls
     internal sealed class ModernButton : Button
     {
         #region Constants and Fields
-        private bool _hover;
-        private bool _pressed;
+        private readonly InteractionMotion _motion;
         #endregion
 
         #region Constructors and Destructors
         public ModernButton()
         {
+            _motion = new InteractionMotion(this);
             Font = AppTheme.body;
             ForeColor = AppTheme.ink;
             Cursor = Cursors.Hand;
@@ -65,33 +65,11 @@ namespace RustDeskHop.UI.Controls
                              )
                     );
 
-        protected override void OnMouseEnter(EventArgs e)
+        protected override void Dispose(bool disposing)
         {
-            _hover = true;
-            Invalidate();
-            base.OnMouseEnter(e);
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            _hover = false;
-            _pressed = false;
-            Invalidate();
-            base.OnMouseLeave(e);
-        }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            _pressed = true;
-            Invalidate();
-            base.OnMouseDown(e);
-        }
-
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            _pressed = false;
-            Invalidate();
-            base.OnMouseUp(e);
+            if (disposing)
+                _motion.Dispose();
+            base.Dispose(disposing);
         }
 
         protected override void OnGotFocus(EventArgs e)
@@ -117,17 +95,9 @@ namespace RustDeskHop.UI.Controls
             float scale = UiScale.Factor(this);
             e.Graphics.Clear(Parent?.BackColor ?? AppTheme.canvas);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            Color fill = !Enabled
-                ? Color.FromArgb(239, 242, 246)
-                :
-                Primary
-                    ?
-                    (_pressed ? Color.FromArgb(0, 77, 196) : _hover ? Color.FromArgb(0, 91, 224) : AppTheme.blue)
-                    : (_pressed ? AppTheme.selection : _hover ? Color.FromArgb(244, 248, 253) : Color.White);
-            if (Quiet && !Primary && !_hover && !_pressed)
-                fill = Parent?.BackColor ?? AppTheme.canvas;
-            if (TabSegment)
-                fill = SelectedTab ? Color.White : _hover ? AppTheme.selection : Parent?.BackColor ?? AppTheme.canvas;
+            Color fill = UiMotion.ButtonFill(Primary, Enabled, _motion.Value, TabSegment && SelectedTab);
+            if (Quiet && !Primary)
+                fill = UiMotion.Blend(Parent?.BackColor ?? AppTheme.canvas, fill, _motion.Value);
             Color ink = !Enabled ? AppTheme.muted : Primary ? Color.White
                 : Accent ? AppTheme.blue : Quiet ? AppTheme.muted : ForeColor;
             using GraphicsPath shape =
@@ -137,7 +107,7 @@ namespace RustDeskHop.UI.Controls
                                       scale
                                      );
             e.Graphics.FillPath(brush, shape);
-            if (TabSegment ? SelectedTab : !Quiet || Primary)
+            if (TabSegment || !Quiet || Primary)
                 e.Graphics.DrawPath(border, shape);
             int textWidth = TextRenderer.MeasureText(Text, Font, Size.Empty, TextFormatFlags.NoPadding).Width;
             float iconSize = 18 * scale;

@@ -76,6 +76,14 @@ namespace RustDeskHop.UI.Controls
                 return;
 
             bool name = OwningColumn?.Name == "ComputerName";
+            Rectangle backgroundBounds = new Rectangle(cellBounds.X,
+                                                       cellBounds.Y,
+                                                       cellBounds.Width,
+                                                       Math.Max(0, cellBounds.Height - 1)
+                                                      );
+            Color rowColor = (DataGridView as RowActionGrid)?.RowColor(rowIndex) ?? Color.White;
+            using (SolidBrush background = new SolidBrush(rowColor))
+                graphics.FillRectangle(background, Rectangle.Intersect(clipBounds, backgroundBounds));
             bool saved = OwningRow.Cells["RustDeskId"].ReadOnly;
             float scale = UiScale.Factor(DataGridView);
             int Px(int logical) => (int)Math.Round(logical * scale);
@@ -112,7 +120,13 @@ namespace RustDeskHop.UI.Controls
                                                 Px(36)
                                                );
                 using GraphicsPath outline = AppTheme.Round(field, Px(7));
-                using Pen border = new Pen(IsInEditMode ? AppTheme.blue : AppTheme.windowBorder, scale);
+                float interaction = (DataGridView as RowActionGrid)?.Interaction(rowIndex, ColumnIndex) ?? 0;
+                using Pen border = new Pen(UiMotion.Blend(AppTheme.windowBorder,
+                                                        AppTheme.blue,
+                                                        IsInEditMode ? 1 : interaction
+                                                       ),
+                                           scale
+                                          );
                 graphics.DrawPath(border, outline);
                 if (!IsInEditMode)
                 {

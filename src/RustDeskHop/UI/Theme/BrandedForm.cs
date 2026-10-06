@@ -10,9 +10,7 @@ namespace RustDeskHop.UI.Theme
         private UiScaleState _scaleState = new UiScaleState(100);
         private bool _ownsScaleState = true;
         private UiScaleLayout? _scaleLayout;
-        private UiScaleSlider? _scaleSlider;
-        private SizeF _logicalMinimum;
-        private float _appliedFactor = 1F;
+        private SizeF _logicalClientSize;
         private bool _applyingScale;
         #endregion
 
@@ -21,6 +19,8 @@ namespace RustDeskHop.UI.Theme
         {
             Icon = AppBranding.Icon;
             ShowIcon = true;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             AutoScaleDimensions = new SizeF(96, 96);
             AutoScaleMode = AutoScaleMode.Dpi;
             Font = AppTheme.body;
@@ -39,7 +39,6 @@ namespace RustDeskHop.UI.Theme
         #region Properties and Indexers
         internal UiScaleState ScaleState => _scaleState;
         protected bool IsApplyingUiScale => _applyingScale;
-        protected int ScaleControlHeight => _scaleSlider?.Height ?? 0;
         protected Panel WindowContent { get; } = new Panel()
         {
             Name = "WindowContent",
@@ -68,22 +67,20 @@ namespace RustDeskHop.UI.Theme
                 return;
 
             float dpi = DeviceDpi / 96F;
-            Size chrome = Size - ClientSize;
-            _logicalMinimum = new SizeF(Math.Max(0, MinimumSize.Width - chrome.Width) / dpi,
-                                        Math.Max(0, MinimumSize.Height - chrome.Height) / dpi
-                                       );
+            _logicalClientSize = new SizeF(ClientSize.Width / dpi, ClientSize.Height / dpi);
             _scaleLayout = new UiScaleLayout(WindowContent);
-            _scaleSlider = new UiScaleSlider(_scaleState) { TabIndex = 10 };
-            _frame.Controls.Add(_scaleSlider);
+            if (_ownsScaleState)
+                _scaleState.SetPercent(UiScaleState.DEFAULT_PERCENT);
             _scaleState.Changed += OnUiScaleChanged;
-            ClientSize = new Size(ClientSize.Width, ClientSize.Height + _scaleSlider.Height);
             ApplyUiScale();
         }
 
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
+            MinimumSize = Size.Empty;
+            MaximumSize = Size.Empty;
             base.OnDpiChanged(e);
-            ApplyUiScale(false);
+            ApplyUiScale();
         }
 
         protected override void Dispose(bool disposing)
@@ -97,7 +94,7 @@ namespace RustDeskHop.UI.Theme
 
         private void OnUiScaleChanged(object? sender, EventArgs e) => ApplyUiScale();
 
-        private void ApplyUiScale(bool resize = true)
+        private void ApplyUiScale()
         {
             if (_scaleLayout is null || _applyingScale || IsDisposed)
                 return;
@@ -107,25 +104,16 @@ namespace RustDeskHop.UI.Theme
             SuspendLayout();
             try
             {
-                float ratio = _scaleState.Factor / _appliedFactor;
-                Size targetSize = new Size((int)Math.Round(ClientSize.Width * ratio),
-                                           (int)Math.Round((ClientSize.Height - ScaleControlHeight) * ratio)
-                                           + ScaleControlHeight
-                                          );
-                _appliedFactor = _scaleState.Factor;
-                Size chrome = Size - ClientSize;
                 float factor = UiScale.Factor(this);
-                MinimumSize = new Size(Math.Max((int)(310 * DeviceDpi / 96F),
-                                               (int)Math.Round(_logicalMinimum.Width * factor)) + chrome.Width,
-                                       (int)Math.Round(_logicalMinimum.Height * factor)
-                                       + ScaleControlHeight + chrome.Height
-                                      );
-                if (resize && WindowState == FormWindowState.Normal)
-                {
-                    ClientSize = targetSize;
-                }
+                MinimumSize = Size.Empty;
+                MaximumSize = Size.Empty;
+                ClientSize = new Size((int)Math.Round(_logicalClientSize.Width * factor),
+                                      (int)Math.Round(_logicalClientSize.Height * factor)
+                                     );
                 _scaleLayout.Apply();
                 WindowContent.PerformLayout();
+                MinimumSize = Size;
+                MaximumSize = Size;
             }
             finally
             {

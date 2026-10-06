@@ -49,6 +49,15 @@ namespace RustDeskHop.UI.Controls
             float scale = UiScale.Factor(DataGridView);
             int Px(int logical) => (int)Math.Round(logical * scale);
             bool enabled = ActionEnabled && DataGridView?.Enabled == true;
+            float interaction = (DataGridView as RowActionGrid)?.Interaction(rowIndex, ColumnIndex) ?? 0;
+            Rectangle backgroundBounds = new Rectangle(cellBounds.X,
+                                                       cellBounds.Y,
+                                                       cellBounds.Width,
+                                                       Math.Max(0, cellBounds.Height - 1)
+                                                      );
+            Color rowColor = (DataGridView as RowActionGrid)?.RowColor(rowIndex) ?? Color.White;
+            using (SolidBrush rowFill = new SolidBrush(rowColor))
+                graphics.FillRectangle(rowFill, Rectangle.Intersect(clipBounds, backgroundBounds));
             Rectangle button = new Rectangle(cellBounds.Left + Px(4),
                                              cellBounds.Top + (cellBounds.Height - Px(UiMetrics.BUTTON_HEIGHT)) / 2,
                                              cellBounds.Width - Px(8),
@@ -57,13 +66,14 @@ namespace RustDeskHop.UI.Controls
             GraphicsState state = graphics.Save();
             graphics.SetClip(Rectangle.Intersect(clipBounds, cellBounds));
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            if (!Quiet)
+            if (!Quiet || interaction > 0)
             {
                 using GraphicsPath shape = AppTheme.Round(button, Px(7));
-                using SolidBrush fill = new SolidBrush(enabled ? Color.White : AppTheme.badge);
+                using SolidBrush fill = new SolidBrush(UiMotion.ButtonFill(false, enabled, interaction));
                 using Pen border = new Pen(enabled ? AppTheme.blue : AppTheme.line, scale);
                 graphics.FillPath(fill, shape);
-                graphics.DrawPath(border, shape);
+                if (!Quiet)
+                    graphics.DrawPath(border, shape);
             }
             if (AddAction)
             {
