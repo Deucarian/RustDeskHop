@@ -2,6 +2,28 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.4 release scope (2026-10-06)
+
+This release collects the composition/conventions work, redesigned inline computer management, fixed 90% density, joined page tabs, direct Connect-button navigation, preserved per-network drafts and the sidebar hover-flicker fix. The maintainer confirmed the installed fix works. The latest local evidence is 279 passing .NET tests, 27 release-tool checks, the executable self-check and the native checks recorded below. The tagged workflow separately requires tests, installer smoke checks and distribution validation before publishing versioned assets and provenance.
+
+The historical sections below describe the state at each local test/deployment; statements such as "not pushed" refer to that stage. Release publication does not convert those checks into a new mixed-DPI, alternate-account or authenticated remote-connection pass. Readiness flags and the unsigned/beta disclosures remain unchanged.
+
+## Network sidebar hover flicker (2026-10-06)
+
+- The maintainer clarified that the remaining left-list issue is flicker/flashing, not selection reverting. The prior draft-preservation fix remains, but did not address native painting: each hover frame invalidated the entire unbuffered ListBox, requesting a background erase; rapid retargeting also restarted the outgoing row at full hover intensity.
+- Owner-drawn rows now paint into a buffer before presentation, using local coordinates for Windows GDI text/focus drawing. Opaque, row-scoped invalidation avoids erasing the list between hover frames. Native ListBox selection, scrolling and accessibility remain in charge. Interrupted fades resume from current per-row values, and animation stops on completion, rebinding, disabling or disposal.
+- All 279 .NET tests pass, including 10 focused cases: atomic row presentation, selection/focus draw states, uninterrupted retarget values, dirty-row bounds with zero observed native background-erase messages during hover, stopped idle animation, reduced motion, rebind/disable reset, scrolled/empty snapshots, visible text on every row and unchanged active edits after 100 hover changes.
+- Native computer-use checks in an isolated in-memory preview with 22 fictional networks confirmed labels throughout the list, selection on lower rows, Down/Home keyboard navigation, wheel scrolling to the end and return to the first network. This check caught and corrected a GDI coordinate issue in the initial buffer implementation. Screenshots verify rendering/layout, not frame-by-frame absence of flicker; the erase-message and atomic-paint tests supply the targeted regression evidence. No personal settings or live connection workflow was used.
+- The self-contained `0.1.1-local.sidebar.20261006` package passes 27 release-tool checks and `--verify-install`. Updated/restarted only the installed companion after verifying management was closed. The previous executable backup and installed/package hashes match; saved companion settings, RustDesk configuration and SVG/ICO hashes are unchanged. All four existing RustDesk processes remained running. GitHub publication was not requested or performed.
+
+## Management draft preservation (2026-10-06)
+
+- Reproduced the defect in an isolated native preview: clicking the already-selected network raised a selection notification, reloaded the editor and discarded an unfinished rename. Switching away and back also discarded drafts, while switching tabs preserved them.
+- Active-network identity now guards repeated notifications. Binding refreshes suppress intermediate selection events, and each network owns an in-memory draft of fields, computers and viewport state while the manager stays open. Save applies only to the selected network and updates existing rows instead of recreating them. New IDs are normalized and locked after a successful save. Closing without saving keeps the existing explicit-discard behavior; README instructions clarify that boundary.
+- All 269 .NET tests pass. Added coverage checks repeated notifications on both pages, preserved text/selection/rows, all network fields, partially entered computers and feedback, per-network current-cell/scroll restoration, saving without rebuilding, new-network rebinding, and isolation of unsaved changes. Existing simulated connection tests also revisit a draft before testing it.
+- Native checks with fictional in-memory data confirmed that the previously failing same-network click retains the rename, switching networks and returning retains it, and saving leaves the row identities intact. No live settings, credentials or RustDesk sessions were used in these checks. This is not a new authenticated-connection, Windows DPI or clean-install pass.
+- The self-contained `0.1.1-local.drafts.20261006` package passes 27 release-tool checks and `--verify-install`. After the maintainer saved and closed management, updated/restarted only the companion with a verified previous-executable backup and matching installed/package executable hashes. Saved companion settings, RustDesk configuration and SVG/ICO hashes stayed unchanged; all four RustDesk processes remained running. GitHub branches and releases were not changed.
+
 ## Adjustable UI size regression coverage (2026-10-06)
 
 - All 238 automated tests pass. The default is 75%, with a shared 50–150% preference. Tests cover all five representative sizes, fixed-size slider controls, legacy/out-of-range settings and saving only the preference without changing computer/network data.
@@ -91,6 +113,25 @@ The portable personal conventions were applied to 80 owned C# files, including t
 - The fictional-data dashboard PNG and generated ICO each have exactly the same SHA-256 hash as the pre-migration files. JSON names, the saved-settings location and installer identity remain unchanged.
 
 These are local checks, not a release or a new hands-on remote-connection/DPI/installer pass. HoloHelmet checkouts, installed applications, live sessions, saved RustDesk/RustDeskHop configuration and release-readiness gates were not changed by this migration.
+
+## Page tabs and direct-connect navigation (2026-10-06)
+
+### Unified tab-strip follow-up
+
+- All 261 .NET tests pass. The two headers now fill one continuous frame, with rounded outer corners and a blue active-page underline. New tests verify connected geometry, no width/height jumps, label containment at six internal densities (50–150%), and the selected indicator on either side.
+- Native screenshots verified both pages at the laptop's unchanged display scale. Actual arrow-key testing caught WinForms treating Left/Right as dialog-focus movement; tab headers now claim those input keys. Retesting confirmed that Left/Right changes both focus and the selected page. Ctrl+Tab and the visible focus ring were also inspected. Existing content transitions and hover feedback are retained.
+- The self-contained `0.1.1-local.unifiedtabs.20261006` build passes all 27 release-tool checks and its `--verify-install` self-check. The README management image uses fictional data rendered by production controls. No real remote connection, new Windows DPI or clean-install claim is made.
+- After the maintainer saved and closed management, updated/restarted only the installed companion. Verified the recoverable previous-executable backup and installed/package match. Companion settings, RustDesk configuration, SVG and ICO hashes stayed unchanged; all four existing RustDesk processes remained running.
+- This follow-up remains local; no GitHub push or release was requested.
+
+The preceding fixed-size/motion version was merged into develop through [PR #41](https://github.com/Deucarian/RustDeskHop/pull/41). Its [required Windows check](https://github.com/Deucarian/RustDeskHop/actions/runs/37472262064) passed after making a synthetic cursor test use explicit action/field targets rather than depending on desktop cursor state outside the grid. Main was not changed.
+
+This subsequent refinement is local on `feature/clear-tabs-and-direct-connect`:
+
+- All 254 .NET tests pass. New cases cover the open active-tab edge/shared divider, no persistent selected rows or cells, no name double-click action, forward/backward Connect-button navigation through both native key-processing paths, and exactly-once Enter/Space activation. Existing draft, motion, fixed-size and connection-workflow tests remain in place.
+- Native fictional-data checks verified direct Tab movement between Connect buttons and out to management, opening management by keyboard, the page-tab appearance on both pages, and Ctrl+Tab with visible focus. Pointer hover remains transient; it is not row selection. The installed dashboard was inspected after restart with no selected row.
+- The self-contained `0.1.1-local.tabs.20261006` package passed 27 release-tool checks and `--verify-install`. Only the installed companion was restarted, with a verified old-executable backup and matching installed/published hashes. Saved companion settings, `RustDesk2.toml` and logo hashes stayed unchanged during deployment; all existing RustDesk processes remained running.
+- No real remote connection, fresh-user installation, high-DPI or mixed-monitor test is claimed for this refinement. It has not been pushed or released. Readiness flags remain unchanged; documentation screenshots contain fictional data only.
 
 ## Fixed-size interface and motion validation (2026-10-06)
 

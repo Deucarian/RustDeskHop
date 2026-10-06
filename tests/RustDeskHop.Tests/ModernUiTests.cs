@@ -73,7 +73,7 @@ namespace RustDeskHop.Tests
                                  row => Assert.IsType<DataGridViewButtonCell>(row.Cells["Connect"])
                                 );
                       Assert.Equal(DataGridViewCellBorderStyle.None, grid.CellBorderStyle);
-                      Assert.Equal(AppTheme.selection, grid.DefaultCellStyle.SelectionBackColor);
+                      Assert.Equal(Color.White, grid.DefaultCellStyle.SelectionBackColor);
                       Assert.True(grid.ReadOnly);
                       Assert.False(grid.MultiSelect);
                   }
@@ -231,7 +231,9 @@ namespace RustDeskHop.Tests
                       Assert.Equal(50, grid.Rows.Count);
                       Assert.True(grid.Rows[1].Height > grid.RowTemplate.MinimumHeight);
                       grid.CurrentCell = grid.Rows[49].Cells[0];
-                      Assert.Equal(49, Assert.Single(grid.SelectedRows.Cast<DataGridViewRow>()).Index);
+                      Assert.Equal(49, grid.CurrentCell.RowIndex);
+                      Assert.Empty(grid.SelectedRows);
+                      Assert.Empty(grid.SelectedCells);
                       Assert.Equal("Computer 50, RustDesk ID 123 456 050", grid.Rows[49].Cells["Computer"].Value);
                   }
                  );
@@ -435,7 +437,7 @@ namespace RustDeskHop.Tests
                       EditName(grid, 0, "Private workstation");
                       Find<ModernButton>(form, "SaveNetwork").PerformClick();
                       Find<ListBox>(form, "Networks").SelectedIndex = 0;
-                      Assert.Equal("Computer 1", grid.Rows[0].Cells[0].Value);
+                      Assert.Equal("Unsaved public name", grid.Rows[0].Cells[0].Value);
                       Assert.Equal("Private workstation", form.Targets[1].Name);
                       Assert.Equal("Computer 1", form.Targets[0].Name);
                   }

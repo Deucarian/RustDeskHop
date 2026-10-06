@@ -55,6 +55,9 @@ namespace RustDeskHop.UI.Controls
         protected override AccessibleObject CreateAccessibilityInstance() =>
             TabSegment ? new SegmentAccessibleObject(this) : base.CreateAccessibilityInstance();
 
+        protected override bool IsInputKey(Keys keyData) =>
+            (TabSegment && keyData is Keys.Left or Keys.Right) || base.IsInputKey(keyData);
+
         public override Size GetPreferredSize(Size proposedSize) =>
             new Size(Math.Max(MinimumSize.Width,
                               TextRenderer.MeasureText(Text, Font).Width
@@ -106,9 +109,18 @@ namespace RustDeskHop.UI.Controls
             using Pen border = new Pen(Primary && Enabled ? fill : Accent && Enabled ? AppTheme.blue : AppTheme.line,
                                       scale
                                      );
-            e.Graphics.FillPath(brush, shape);
-            if (TabSegment || !Quiet || Primary)
-                e.Graphics.DrawPath(border, shape);
+            if (TabSegment)
+            {
+                Rectangle strip = Parent?.ClientRectangle ?? ClientRectangle;
+                strip.Offset(-Left, -Top);
+                PageTabPainter.Draw(e.Graphics, ClientRectangle, strip, scale, SelectedTab, Enabled, _motion.Value);
+            }
+            else
+            {
+                e.Graphics.FillPath(brush, shape);
+                if (!Quiet || Primary)
+                    e.Graphics.DrawPath(border, shape);
+            }
             int textWidth = TextRenderer.MeasureText(Text, Font, Size.Empty, TextFormatFlags.NoPadding).Width;
             float iconSize = 18 * scale;
             float gap = Glyph == UiGlyph.NONE ? 0 : 8 * scale;

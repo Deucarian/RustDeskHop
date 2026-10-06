@@ -10,7 +10,7 @@ namespace RustDeskHop.UI
         {
             Name = "Computers",
             AccessibleName = "Saved computers",
-            AccessibleDescription = "Choose Connect on a computer, or select its row and press Enter.",
+            AccessibleDescription = "Choose Connect on a computer. Tab moves between Connect buttons; Enter or Space connects.",
             TabIndex = 0
         };
         private readonly ModernButton _profilesButton = new ModernButton

@@ -107,15 +107,15 @@ namespace RustDeskHop.UI.Controls
                 return;
 
             int Px(int value) => UiScale.Pixels(this, value);
-            int labelWidth = _buttons.Count == 0 ? Px(136)
-                : _buttons.Max(button => TextRenderer.MeasureText(button.Text, button.Font).Width + Px(28));
-            int trackWidth = Math.Min(ClientSize.Width, Math.Max(Px(280), labelWidth * 2 + Px(8)));
-            _track.SetBounds(0, 0, trackWidth, Px(36));
+            _track.SetBounds(0, 0, ClientSize.Width, Px(36));
             _pageHost.SetBounds(0, Px(48), ClientSize.Width, Math.Max(1, ClientSize.Height - Px(48)));
             for (int index = 0; index < _buttons.Count; index++)
             {
-                int width = (_track.Width - Px(6)) / 2;
-                _buttons[index].SetBounds(Px(3) + (1 - index) * width, Px(3), width - Px(4), Px(30));
+                int position = _buttons.Count - 1 - index;
+                int left = position * _track.Width / _buttons.Count;
+                int right = (position + 1) * _track.Width / _buttons.Count;
+                _buttons[index].SetBounds(left, 0, right - left, _track.Height);
+                _buttons[index].Invalidate();
                 _pages[index].Bounds = _pageHost.ClientRectangle;
             }
         }
