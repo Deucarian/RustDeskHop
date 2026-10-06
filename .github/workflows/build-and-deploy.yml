@@ -19,11 +19,11 @@ jobs:
       - name: Test routing, recovery and UI logic
         run: dotnet test tests/RustDeskHop.Tests/RustDeskHop.Tests.csproj -c Release --logger "trx;LogFileName=tests.trx" --results-directory TestResults
       - name: Publish self-contained build
-        run: dotnet publish RustDeskCompanion.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -p:Version=0.0.0-ci.${{ github.run_number }} --output publish
+        run: dotnet publish src/RustDeskHop/RustDeskHop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -p:Version=0.0.0-ci.${{ github.run_number }} --output publish
       - name: Package and validate distribution
         shell: pwsh
         run: |
-          ./tools/Collect-ReleaseNotices.ps1 -AssetsFile obj/project.assets.json -PublishDirectory publish -InnoCompilerDirectory "${env:ProgramFiles(x86)}\Inno Setup 6"
+          ./tools/Collect-ReleaseNotices.ps1 -AssetsFile src/RustDeskHop/obj/project.assets.json -PublishDirectory publish -InnoCompilerDirectory "${env:ProgramFiles(x86)}\Inno Setup 6"
           ./tools/Test-ReleaseTools.ps1 -PublishDirectory publish
           ./tools/Build-Installer.ps1 -PublishDirectory publish -OutputDirectory artifacts -Version "0.0.0-ci.${{ github.run_number }}"
           Compress-Archive -Path publish/* -DestinationPath artifacts/RustDeskHop-build.zip

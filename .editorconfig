@@ -1,0 +1,140 @@
+# Portable personal C# conventions. No build-time or on-save formatter is required.
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+
+[*.cs]
+end_of_line = crlf
+trim_trailing_whitespace = false
+insert_final_newline = false
+tab_width = 4
+csharp_preferred_modifier_order = public, private, protected, internal, file, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async, required:suggestion
+csharp_style_namespace_declarations = block_scoped:suggestion
+csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
+csharp_style_implicit_object_creation_when_type_is_apparent = false:suggestion
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+
+# Specific constant rules take precedence over field rules.
+dotnet_naming_rule.constants.symbols = constants
+dotnet_naming_rule.constants.style = upper_snake
+dotnet_naming_rule.constants.severity = warning
+dotnet_naming_symbols.constants.applicable_kinds = field, local
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_rule.private_fields.symbols = private_fields
+dotnet_naming_rule.private_fields.style = private_camel
+dotnet_naming_rule.private_fields.severity = warning
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_rule.other_fields.symbols = other_fields
+dotnet_naming_rule.other_fields.style = camel
+dotnet_naming_rule.other_fields.severity = warning
+dotnet_naming_symbols.other_fields.applicable_kinds = field
+dotnet_naming_symbols.other_fields.applicable_accessibilities = public, internal, protected, protected_internal, private_protected
+dotnet_naming_rule.types_and_members.symbols = types_and_members
+dotnet_naming_rule.types_and_members.style = pascal
+dotnet_naming_rule.types_and_members.severity = warning
+dotnet_naming_symbols.types_and_members.applicable_kinds = class, struct, enum, delegate, property, method, event
+dotnet_naming_rule.interfaces.symbols = interfaces
+dotnet_naming_rule.interfaces.style = interface_pascal
+dotnet_naming_rule.interfaces.severity = warning
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_rule.locals_and_parameters.symbols = locals_and_parameters
+dotnet_naming_rule.locals_and_parameters.style = camel
+dotnet_naming_rule.locals_and_parameters.severity = warning
+dotnet_naming_symbols.locals_and_parameters.applicable_kinds = local, parameter
+dotnet_naming_style.upper_snake.capitalization = all_upper
+dotnet_naming_style.upper_snake.word_separator = _
+dotnet_naming_style.private_camel.capitalization = camel_case
+dotnet_naming_style.private_camel.required_prefix = _
+dotnet_naming_style.camel.capitalization = camel_case
+dotnet_naming_style.pascal.capitalization = pascal_case
+dotnet_naming_style.interface_pascal.capitalization = pascal_case
+dotnet_naming_style.interface_pascal.required_prefix = I
+resharper_csharp_naming_rule.constants = AA_BB
+resharper_csharp_naming_rule.private_constants = AA_BB
+resharper_csharp_naming_rule.enum_member = AA_BB
+resharper_csharp_naming_rule.private_static_fields = _ + aaBb
+resharper_csharp_naming_rule.private_static_readonly = _ + aaBb
+resharper_csharp_naming_rule.static_readonly = aaBb
+resharper_csharp_naming_style.pascal_case.allow_uppercase_acronyms = true
+resharper_csharp_naming_style.pascal_case.acronyms = HTML, XML, JSON, DTO, API
+
+# Shared C# layout and readability preferences.
+resharper_apply_auto_detected_rules = false
+resharper_for_simple_types = use_explicit_type
+resharper_object_creation_when_type_evident = explicitly_typed
+resharper_braces_for_for = required
+resharper_braces_for_foreach = required
+resharper_braces_for_ifelse = required_for_multiline_statement
+resharper_braces_for_while = required
+resharper_place_simple_embedded_statement_on_same_line = false
+resharper_method_or_operator_body = expression_body
+resharper_place_expr_accessor_on_single_line = true
+resharper_place_expr_method_on_single_line = true
+resharper_place_expr_property_on_single_line = true
+resharper_csharp_empty_block_style = together_same_line
+resharper_csharp_blank_lines_around_field = 0
+resharper_csharp_blank_lines_inside_region = 0
+resharper_csharp_keep_blank_lines_in_code = 1
+resharper_csharp_keep_blank_lines_in_declarations = 1
+resharper_blank_lines_after_block_statements = 0
+resharper_blank_lines_after_control_transfer_statements = 1
+resharper_blank_lines_before_single_line_comment = 1
+resharper_indent_preprocessor_directives = normal
+resharper_indent_preprocessor_region = usual_indent
+resharper_max_enum_members_on_line = 1
+resharper_formatter_off_tag = @formatter:off
+resharper_formatter_on_tag = @formatter:on
+resharper_formatter_tags_enabled = true
+
+# Approved SIM-860 wrapping: Reformat Code only, never hard-wrap while typing.
+# Indivisible literals/identifiers can exceed this target width.
+max_line_length = 120
+ij_wrap_on_typing = false
+resharper_csharp_max_line_length = 120
+resharper_csharp_keep_user_linebreaks = false
+resharper_csharp_continuous_indent_multiplier = 1
+resharper_csharp_align_multiline_argument = true
+resharper_csharp_align_multiline_parameter = true
+resharper_csharp_align_first_arg_by_paren = true
+resharper_csharp_align_multiline_calls_chain = false
+resharper_csharp_align_multiline_expression = false
+resharper_csharp_outdent_commas = false
+resharper_csharp_outdent_dots = false
+resharper_csharp_outdent_binary_ops = false
+resharper_csharp_wrap_arguments_style = chop_if_long
+resharper_csharp_wrap_parameters_style = chop_if_long
+resharper_csharp_wrap_before_invocation_lpar = false
+resharper_csharp_wrap_after_invocation_lpar = false
+resharper_csharp_wrap_before_invocation_rpar = true
+resharper_csharp_wrap_before_declaration_lpar = false
+resharper_csharp_wrap_after_declaration_lpar = false
+resharper_csharp_wrap_before_declaration_rpar = false
+resharper_csharp_wrap_before_comma = false
+resharper_csharp_wrap_chained_method_calls = chop_if_long
+resharper_csharp_wrap_before_first_method_call = true
+resharper_csharp_wrap_after_dot_in_method_calls = false
+resharper_csharp_wrap_chained_binary_expressions = chop_if_long
+resharper_csharp_wrap_before_binary_opsign = true
+resharper_csharp_wrap_ternary_expr_style = chop_if_long
+resharper_csharp_wrap_before_ternary_opsigns = true
+resharper_csharp_wrap_object_and_collection_initializer_style = chop_if_long
+resharper_csharp_wrap_array_initializer_style = chop_if_long
+
+[*.{json,yaml,yml,csproj,props,targets,slnx}]
+indent_size = 2
+
+# Build output and generated resources are not convention migration targets.
+[**/{obj,bin,artifacts}/**]
+generated_code = true
