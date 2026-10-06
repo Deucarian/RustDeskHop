@@ -8,52 +8,31 @@ namespace RustDeskHop.Tests
     public sealed partial class ModernUiTests
     {
         #region Test Methods
-        [Fact]
-        public void MissingOrInvalidScaleUsesSeventyFivePercentWithoutDiscardingComputers()
-        {
-            AppSettings original = Settings(1);
-            string json = JsonSerializer.Serialize(original);
-            foreach (int invalid in new[] { -1, 0, 49, 151, int.MaxValue })
-            {
-                AppSettings? loaded = JsonSerializer.Deserialize<AppSettings>(json.Replace("\"UiScalePercent\":100",
-                                                                                         $"\"UiScalePercent\":{invalid}"
-                                                                                        ));
-                Assert.Equal(75, loaded!.UiScalePercent);
-                Assert.Single(loaded.Targets);
-            }
-            AppSettings? legacy = JsonSerializer.Deserialize<AppSettings>(json.Replace("\"UiScalePercent\":100,", ""));
-            Assert.Equal(75, legacy!.UiScalePercent);
-            Assert.Single(legacy.Targets);
-        }
-
         [Theory]
         [InlineData(50)]
         [InlineData(75)]
         [InlineData(100)]
         [InlineData(125)]
         [InlineData(150)]
-        public void ScaleChangesAllContentButNotTheSlider(int percent)
+        public void FixedScaleIgnoresTheOldPreferenceAndHasNoSlider(int percent)
         {
             OnSta(() =>
                   {
                       AppSettings settings = Settings(3);
+                      string json = JsonSerializer.Serialize(settings);
+                      settings = JsonSerializer.Deserialize<AppSettings>(
+                          "{\"UiScalePercent\":" + percent + "," + json[1..])!;
                       using MainForm form = TestApplication.CreateMainForm(settings);
                       form.Show();
                       Application.DoEvents();
-                      UiScaleSlider strip = Find<UiScaleSlider>(form, "UiScaleControls");
-                      TrackBar slider = Find<TrackBar>(form, "UiScaleSlider");
-                      Size sliderSize = slider.Size;
-                      float sliderFont = slider.Font.Size;
-                      form.ScaleState.SetPercent(percent);
-                      Application.DoEvents();
                       ComputerGrid grid = Find<ComputerGrid>(form, "Computers");
-                      int minimumRow = (int)Math.Round(64 * percent / 100F);
+                      int minimumRow = (int)Math.Round(64 * .9F);
                       Assert.InRange(grid.Rows[0].Height, minimumRow, minimumRow + 4);
-                      Assert.Equal(AppTheme.body.Size * percent / 100F, grid.Font.Size, 2);
-                      Assert.Equal(sliderSize, slider.Size);
-                      Assert.Equal(sliderFont, slider.Font.Size);
-                      Assert.Equal(40, strip.Height);
-                      Assert.Equal($"{percent}%", Find<Label>(form, "UiScaleValue").Text);
+                      Assert.Equal(AppTheme.body.Size * .9F, grid.Font.Size, 2);
+                      Assert.Equal(90, form.ScaleState.Percent);
+                      Assert.Empty(Descendants(form).OfType<TrackBar>());
+                      Assert.Equal(new Size(810, 270), form.ClientSize);
+                      Assert.DoesNotContain("UiScalePercent", JsonSerializer.Serialize(settings));
                       Assert.True(grid.Bottom <= Find<ModernButton>(form, "ManageNetworks").Top);
                   }
                  );
@@ -149,7 +128,7 @@ namespace RustDeskHop.Tests
         }
 
         [Fact]
-        public void ScaleCommitPersistsOnlyThePreferenceAndSurvivesReload()
+        public void FixedScaleDoesNotRewriteLegacySettingsAtStartup()
         {
             OnSta(() =>
                   {
@@ -163,13 +142,8 @@ namespace RustDeskHop.Tests
                       form.Show();
                       Application.DoEvents();
                       Assert.Equal(0, store.SaveCount);
-                      form.ScaleState.SetPercent(75);
-                      Assert.Equal(0, store.SaveCount);
-                      form.ScaleState.Commit();
-                      form.ScaleState.Commit();
-                      Assert.Equal(1, store.SaveCount);
+                      Assert.Equal(90, form.ScaleState.Percent);
                       AppSettings loaded = ConfigStore.Load(path, null, out _);
-                      Assert.Equal(75, loaded.UiScalePercent);
                       Assert.Equal(JsonSerializer.Serialize(settings.Targets),
                                    JsonSerializer.Serialize(loaded.Targets)
                                   );

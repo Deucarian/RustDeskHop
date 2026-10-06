@@ -17,6 +17,7 @@ namespace RustDeskHop.UI
         private bool _rebuilding;
         private int? _testingRow;
         private readonly Label _feedback = AppTheme.Label("", AppTheme.small, AppTheme.muted);
+        private readonly ContentTransition _listTransition;
         #endregion
 
         #region Constructors and Destructors
@@ -25,6 +26,7 @@ namespace RustDeskHop.UI
             _testConnection = testConnection;
             AutoScaleMode = AutoScaleMode.None;
             BuildUi();
+            _listTransition = new ContentTransition(_grid);
         }
         #endregion
 
@@ -46,7 +48,7 @@ namespace RustDeskHop.UI
             _targets = targets;
             _drafts = new NetworkComputerDrafts(profile?.Id ?? "", targets);
             ShowFeedback("");
-            RebuildRows();
+            RebuildRows(false);
         }
 
         internal bool TrySave(out string? error)

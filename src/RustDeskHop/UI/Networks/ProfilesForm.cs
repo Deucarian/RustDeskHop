@@ -8,11 +8,11 @@ namespace RustDeskHop.UI
     internal sealed class ProfilesForm : BrandedForm
     {
         #region Constants and Fields
-        private readonly ListBox _profileList = new ListBox();
+        private readonly HoverListBox _profileList = new HoverListBox();
         private readonly TextBox _nameBox = new TextBox();
         private readonly TextBox _addressBox = new TextBox();
         private readonly TextBox _keyBox = new TextBox();
-        private readonly CheckBox _privateNetworkBox = new CheckBox()
+        private readonly CheckBox _privateNetworkBox = new AnimatedCheckBox()
         {
             Text = "Requires Tailscale/private network",
             AutoSize = true
@@ -29,9 +29,9 @@ namespace RustDeskHop.UI
         private readonly Func<IWin32Window, TargetDefinition, ServerProfile, Task<ConnectionOutcome>>? _testConnection;
         private bool _testing;
         private int _selectedIndex = -1;
-        private bool _userSized;
-        private bool _fitPending;
         private SectionTabs _sections = null!;
+        private readonly ContentTransition _networkTransition;
+        private readonly ContentTransition _networkListTransition;
         #endregion
 
         #region Constructors and Destructors
@@ -41,6 +41,7 @@ namespace RustDeskHop.UI
                                 testConnection = null)
         {
             _testConnection = testConnection;
+            _networkListTransition = new ContentTransition(_profileList);
             _computers = new NetworkComputersEditor(testConnection is null ? null : TestComputerAsync);
             _profiles = source.Select(Clone).ToList();
             Targets = (targets ?? [])
@@ -50,7 +51,7 @@ namespace RustDeskHop.UI
             Text = "Manage computers & networks";
             StartPosition = FormStartPosition.CenterParent;
             MinimumSize = new Size(780, 330);
-            ClientSize = new Size(900, 416);
+            ClientSize = new Size(900, 440);
             WindowContent.BackColor = Color.White;
             SurfacePanel surface = new SurfacePanel
             {
@@ -100,7 +101,11 @@ namespace RustDeskHop.UI
                     return;
 
                 bool selected = (e.State & DrawItemState.Selected) != 0;
-                using SolidBrush background = new SolidBrush(AppTheme.canvas);
+                using SolidBrush background = new SolidBrush(UiMotion.Blend(AppTheme.canvas,
+                                                                           AppTheme.selection,
+                                                                           _profileList.HoverAmount(e.Index)
+                                                                          )
+                                                            );
                 e.Graphics.FillRectangle(background, e.Bounds);
                 if (selected)
                 {
@@ -247,6 +252,7 @@ namespace RustDeskHop.UI
                 Margin = Padding.Empty
             };
             _sections = sections;
+            _networkTransition = sections.Transition;
             Panel settingsPage = new Panel
             {
                 Text = "Network settings",
@@ -267,9 +273,6 @@ namespace RustDeskHop.UI
             sections.SelectedIndex = 1;
             remove.Visible = false;
             sections.SelectedIndexChanged += (_, _) => remove.Visible = sections.SelectedIndex == 0;
-            sections.SelectedIndexChanged += (_, _) => ScheduleContentFit();
-            _computers.ContentHeightChanged += (_, _) => ScheduleContentFit();
-            ResizeEnd += (_, _) => _userSized = true;
             add.Click += (_, _) =>
             {
                 sections.SelectedIndex = 0;
@@ -317,7 +320,6 @@ namespace RustDeskHop.UI
             {
                 UpdateHintWidth();
                 RebindProfiles(_profiles.Count > 0 ? 0 : -1);
-                ScheduleContentFit();
             };
         }
         #endregion
@@ -328,27 +330,6 @@ namespace RustDeskHop.UI
         #endregion
 
         #region Methods
-        private void ScheduleContentFit()
-        {
-            if (_userSized || _fitPending || !IsHandleCreated || IsDisposed)
-                return;
-
-            _fitPending = true;
-            BeginInvoke((Action)(() =>
-                        {
-                            _fitPending = false;
-                            if (IsDisposed || _userSized || WindowState != FormWindowState.Normal)
-                                return;
-
-                            int Px(int value) => (int)Math.Round(value * UiScale.Factor(this));
-                            int desired = _sections.SelectedIndex == 0
-                                ? Px(440)
-                                : Math.Clamp(_computers.ContentHeight + Px(140), Px(300), Px(500));
-                            ClientSize = new Size(ClientSize.Width, desired + ScaleControlHeight);
-                        })
-                       );
-        }
-
         private void LoadSelected()
         {
             // Font/item-height changes can recreate the native list handle and raise selection events.
@@ -356,10 +337,12 @@ namespace RustDeskHop.UI
             if (IsApplyingUiScale)
                 return;
 
+            _networkTransition.Begin();
             if (_profileList.SelectedIndex < 0 || _profileList.SelectedIndex >= _profiles.Count)
             {
                 _selectedIndex = -1;
                 _computers.LoadNetwork(null, Targets);
+                _networkTransition.End();
                 return;
             }
 
@@ -372,6 +355,7 @@ namespace RustDeskHop.UI
             _probeHostBox.Text = profile.ProbeHost;
             _probePortBox.Value = Math.Clamp(profile.ProbePort, 1, 65535);
             _computers.LoadNetwork(profile, Targets);
+            _networkTransition.End();
         }
 
         private void NewProfile()
@@ -487,6 +471,7 @@ namespace RustDeskHop.UI
 
         private void RebindProfiles(int index)
         {
+            _networkListTransition.Begin();
             _profileList.BeginUpdate();
             try
             {
@@ -499,6 +484,7 @@ namespace RustDeskHop.UI
             {
                 _profileList.EndUpdate();
             }
+            _networkListTransition.End(true);
         }
 
         private static ServerProfile Clone(ServerProfile p) => new ServerProfile()

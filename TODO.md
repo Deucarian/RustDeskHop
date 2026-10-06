@@ -1,5 +1,17 @@
 # TODO
 
+## Fixed 90% size and consistent motion (2026-10-06)
+
+- [x] Remove the experimental slider and saved scale preference; use the former 90% size as the shared design density without altering existing settings on startup.
+- [x] Match management tabs to the blue-outline Test palette, with a quiet selected fill and accessible selection state.
+- [x] Fix each companion window's minimum and maximum size; disable manual resizing/maximizing and keep long lists scrollable.
+- [x] Share hover/focus/press feedback across buttons, row actions, editable fields and network items; animate list reflows and management-page changes.
+- [x] Respect Windows reduced motion/high contrast, stop idle timers, dispose animation resources and preserve drafts through rapid page changes.
+- [x] Pass 248 automated tests, including animation lifecycle, inline-editor focus, network-list identity and fixed-size regression coverage.
+- [x] Inspect native entry, keyboard navigation, simulated Test/save, network addition and final installed dashboard; pass 27 release-tool checks and the packaged self-check, then update/restart only RustDeskHop with a verified backup and unchanged settings/logo/RustDesk processes.
+- [ ] Repeat real high-DPI/mixed-monitor and small-work-area checks; the current-screen checks do not establish that matrix.
+- [ ] Publish this follow-up when requested; it is separate from the prior develop promotion.
+
 ## Adjustable UI size and management tabs (2026-10-06)
 
 - [x] Default the interface to 75%; offer a shared 50–150% slider that stays at its own normal size and remembers the chosen setting without changing Windows or RustDesk.

@@ -16,6 +16,7 @@ namespace RustDeskHop.UI
         private readonly IConnectionWorkflow _connections;
         private readonly IConnectionInteraction _connectionInteraction;
         private readonly Func<IWin32Window, IConnectionInteraction> _createInteraction;
+        private readonly ContentTransition _listTransition;
         #endregion
 
         #region Constructors and Destructors
@@ -34,13 +35,12 @@ namespace RustDeskHop.UI
             MinimumSize = new Size(740, 320);
             ClientSize = new Size(900, 300);
             BuildUi();
+            _listTransition = new ContentTransition(_targetsGrid);
             Load += (_, _) =>
             {
                 _settings ??= settingsStore.Load(out _settingsWarning);
-                ScaleState.SetPercent(_settings.UiScalePercent);
                 RefreshTargets();
             };
-            ScaleState.Committed += (_, _) => SaveUiScale();
             Shown += (_, _) =>
             {
                 if (_settingsWarning is not null)
@@ -59,6 +59,7 @@ namespace RustDeskHop.UI
         #region Methods
         private void RefreshTargets()
         {
+            _listTransition.Begin();
             _targetsGrid.DataSource = _settings
                 .Targets.Select(target => new ComputerRow(target.Name,
                                                           target.RustDeskId,
@@ -69,9 +70,15 @@ namespace RustDeskHop.UI
                                                          )
                                )
                 .ToList();
+            foreach (DataGridViewRow row in _targetsGrid.Rows)
+            {
+                TargetDefinition target = _settings.Targets[row.Index];
+                row.Tag = (target.ProfileId, target.RustDeskId);
+            }
             _emptyState.Visible = _settings.Targets.Count == 0;
             _targetsGrid.Visible = _settings.Targets.Count > 0;
             WindowContent.PerformLayout();
+            _listTransition.End(true);
         }
 
         private async Task ConnectRowAsync(int index)
@@ -102,8 +109,7 @@ namespace RustDeskHop.UI
                 SaveSettings(new AppSettings
                              {
                                  Profiles = dialog.Profiles,
-                                 Targets = dialog.Targets,
-                                 UiScalePercent = ScaleState.Percent
+                                 Targets = dialog.Targets
                              }
                             );
             }
@@ -122,30 +128,13 @@ namespace RustDeskHop.UI
             return _connections.ConnectAsync(target, preview, _createInteraction(owner));
         }
 
-        private void SaveUiScale()
-        {
-            if (_settings is null || _settings.UiScalePercent == ScaleState.Percent)
-                return;
-
-            AppSettings updated = new AppSettings
-            {
-                Profiles = _settings.Profiles,
-                Targets = _settings.Targets,
-                UiScalePercent = ScaleState.Percent
-            };
-            if (!SaveSettings(updated, false))
-                ScaleState.SetPercent(_settings.UiScalePercent);
-        }
-
-        private bool SaveSettings(AppSettings updated, bool refreshTargets = true)
+        private void SaveSettings(AppSettings updated)
         {
             try
             {
                 _settingsStore.Save(updated);
                 _settings = updated;
-                if (refreshTargets)
-                    RefreshTargets();
-                return true;
+                RefreshTargets();
             }
             catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
             {
@@ -155,7 +144,6 @@ namespace RustDeskHop.UI
                                 MessageBoxButtons.OK,
                                 MessageBoxIcon.Warning
                                );
-                return false;
             }
         }
         #endregion

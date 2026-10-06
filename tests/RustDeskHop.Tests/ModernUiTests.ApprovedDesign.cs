@@ -81,16 +81,16 @@ namespace RustDeskHop.Tests
                       using ProfilesForm form = new ProfilesForm(settings.Profiles, settings.Targets);
                       form.Show();
                       Application.DoEvents();
-                      Assert.InRange(form.ClientSize.Height - Find<UiScaleSlider>(form, "UiScaleControls").Height,
-                                     300, 360);
+                      Assert.Equal(new Size(810, 396), form.ClientSize);
                       DataGridView grid = Find<DataGridView>(form, "NetworkComputers");
                       Assert.False(grid.ColumnHeadersVisible);
                       ModernButton save = Find<ModernButton>(form, "SaveNetwork");
                       ModernButton close = Descendants(form).OfType<ModernButton>().Single(b => b.Text == "Close");
                       Assert.False(close.Bounds.IntersectsWith(save.Bounds));
-                      Assert.True(close.Right + UiMetrics.GAP <= save.Left);
+                      Assert.True(close.Right + UiScale.Pixels(form, UiMetrics.GAP) <= save.Left);
                       Assert.Equal(close.Top, save.Top);
-                      Assert.All(grid.Rows.Cast<DataGridViewRow>(), row => Assert.True(row.Height >= 64));
+                      Assert.All(grid.Rows.Cast<DataGridViewRow>(),
+                                 row => Assert.True(row.Height >= UiScale.Pixels(form, 64)));
                   }
                  );
         }
@@ -111,20 +111,22 @@ namespace RustDeskHop.Tests
                       Assert.True(computers.Left < networks.Left);
                       Assert.False(computers.Primary);
                       Assert.False(computers.Quiet);
-                      Assert.True(networks.Quiet);
+                      Assert.False(networks.Quiet);
+                      Assert.True(networks.Accent);
+                      Assert.True(computers.Accent);
                       typeof(Control).GetMethod("OnKeyDown", BindingFlags.Instance | BindingFlags.NonPublic)!
                           .Invoke(computers, [new KeyEventArgs(Keys.Right)]);
                       Application.DoEvents();
                       Assert.Equal(0, tabs.SelectedIndex);
                       Assert.Equal("Network settings", tabs.SelectedTab!.Text);
                       Assert.False(networks.Quiet);
-                      Assert.True(computers.Quiet);
+                      Assert.False(computers.Quiet);
                   }
                  );
         }
 
         [Fact]
-        public void ManualWindowSizingIsPreservedWhenChangingNetworks()
+        public void WindowSizeStaysFixedWhenChangingNetworksOrAttemptingResize()
         {
             OnSta(() =>
                   {
@@ -132,12 +134,14 @@ namespace RustDeskHop.Tests
                       using ProfilesForm form = new ProfilesForm(settings.Profiles, settings.Targets);
                       form.Show();
                       Application.DoEvents();
-                      form.ClientSize = new Size(960, 480);
-                      typeof(Form).GetMethod("OnResizeEnd", BindingFlags.Instance | BindingFlags.NonPublic)!
-                          .Invoke(form, [EventArgs.Empty]);
+                      Size fixedSize = form.Size;
+                      form.Size = new Size(1920, 1040);
+                      Assert.Equal(fixedSize, form.Size);
+                      form.Size = new Size(100, 100);
                       Find<ListBox>(form, "Networks").SelectedIndex = 1;
                       Application.DoEvents();
-                      Assert.Equal(new Size(960, 480), form.ClientSize);
+                      Assert.Equal(fixedSize, form.Size);
+                      Assert.Equal(form.MinimumSize, form.MaximumSize);
                   }
                  );
         }
@@ -163,6 +167,10 @@ namespace RustDeskHop.Tests
                       Find<ListBox>(form, "Networks").SelectedIndex = 1;
                       ClickAddRow(form);
                       Application.DoEvents();
+                      foreach (TransitionOverlay overlay in Descendants(form).OfType<TransitionOverlay>().ToArray())
+                      {
+                          overlay.Finish();
+                      }
                       Control content = Assert.Single(form.Controls.Cast<Control>());
                       using Bitmap bitmap = new Bitmap(content.Width, content.Height);
                       content.DrawToBitmap(bitmap, content.ClientRectangle);

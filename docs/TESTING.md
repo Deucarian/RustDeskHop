@@ -92,6 +92,16 @@ The portable personal conventions were applied to 80 owned C# files, including t
 
 These are local checks, not a release or a new hands-on remote-connection/DPI/installer pass. HoloHelmet checkouts, installed applications, live sessions, saved RustDesk/RustDeskHop configuration and release-readiness gates were not changed by this migration.
 
+## Fixed-size interface and motion validation (2026-10-06)
+
+The former 90% slider setting is now the shared design density, with no slider or persisted user-scale setting. Older scale fields are ignored on load without writing the settings file. All companion forms have matching minimum/maximum sizes and disabled resizing/maximizing; lists scroll within them. Windows DPI remains independent.
+
+- All 248 .NET tests pass locally. Coverage includes fixed sizes for the dashboard, manager and sign-in window; legacy preferences; repeated internal scaling while editing; rapid tab changes preserving drafts; hover-action targeting; animation retargeting, cancellation, disposal and idle timers; keyboard focus after inline Add; and stable computer/network row identities. Reduced motion is tested through the animation-policy seam, not by changing this laptop's Windows settings.
+- Native preview checks at the laptop's existing display scale: no slider, blue-outline tabs matching Test, readable network fields, fixed dashboard dimensions after an attempted border drag, inline Add/name/ID entry, Tab navigation, simulated Test/loading/result feedback, saving a new row and adding a network with list/page transitions. The preview uses fictional data, an in-memory settings store and a fake connection launcher; it does not prove a real remote connection.
+- The self-contained `0.1.1-local.motion.20261006` package passed all 27 release-tool checks and `--verify-install`. Updated/restarted only the installed companion after verifying that no editor was open. Verified the old executable backup, installed/published executable equality, unchanged saved settings, `RustDesk2.toml` and logo hashes, and the continued presence of all existing RustDesk processes. The installed dashboard was inspected again with its three existing computers, no slider and disabled maximize. This is a local build from the working tree, not a GitHub publication.
+- Documentation images are rendered from production controls with fictional data. Live screenshots containing real computer identifiers are not added to the repository.
+- Real 125/150/200%, mixed-monitor and small-work-area checks remain pending for this revision. No clean-user install, authentication/UAC, cross-version connection or public release is claimed. The existing release-readiness flags stay unchanged.
+
 ## Required hands-on checks (not yet complete)
 
 Use disposable test machines and a fallback route; never jeopardize the only connection to a remote host.

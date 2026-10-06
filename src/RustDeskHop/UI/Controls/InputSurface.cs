@@ -7,12 +7,14 @@ namespace RustDeskHop.UI.Controls
     {
         #region Constants and Fields
         private readonly Control _editor;
+        private readonly InteractionMotion _motion;
         #endregion
 
         #region Constructors and Destructors
         public InputSurface(Control editor)
         {
             _editor = editor;
+            _motion = new InteractionMotion(this, editor);
             AutoSize = true;
             Height = UiMetrics.BUTTON_HEIGHT;
             MinimumSize = new Size(100, UiMetrics.BUTTON_HEIGHT);
@@ -29,6 +31,13 @@ namespace RustDeskHop.UI.Controls
         #endregion
 
         #region Methods
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _motion.Dispose();
+            base.Dispose(disposing);
+        }
+
         public override Size GetPreferredSize(Size proposedSize) =>
             new Size(UiScale.Pixels(this, 100), UiScale.Pixels(this, UiMetrics.BUTTON_HEIGHT));
 
@@ -52,7 +61,11 @@ namespace RustDeskHop.UI.Controls
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             using GraphicsPath shape =
                 AppTheme.Round(new RectangleF(.75F, .75F, Width - 1.5F, Height - 1.5F), 7 * UiScale.Factor(this));
-            using Pen pen = new Pen(ContainsFocus ? AppTheme.blue : Color.FromArgb(189, 199, 212));
+            using Pen pen = new Pen(UiMotion.Blend(AppTheme.windowBorder,
+                                                  AppTheme.blue,
+                                                  ContainsFocus ? 1 : _motion.Value
+                                                 )
+                                  );
             e.Graphics.DrawPath(pen, shape);
         }
         #endregion
