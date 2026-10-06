@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>RustDeskHop</AssemblyName>
+    <RootNamespace>RustDeskHop</RootNamespace>
+    <Product>RustDeskHop</Product>
+    <Description>Independent open-source network companion for RustDesk</Description>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    <RepositoryRoot>$(MSBuildProjectDirectory)\..\..\</RepositoryRoot>
+  </PropertyGroup>
+  <Import Project="$(RepositoryRoot)build\ApplicationBranding.targets" />
+  <Import Project="$(RepositoryRoot)build\Distribution.targets" />
+</Project>
