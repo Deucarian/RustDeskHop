@@ -2,6 +2,76 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.4 release scope (2026-10-06)
+
+This release collects the composition/conventions work, redesigned inline computer management, fixed 90% density, joined page tabs, direct Connect-button navigation, preserved per-network drafts and the sidebar hover-flicker fix. The maintainer confirmed the installed fix works. The latest local evidence is 279 passing .NET tests, 27 release-tool checks, the executable self-check and the native checks recorded below. The tagged workflow separately requires tests, installer smoke checks and distribution validation before publishing versioned assets and provenance.
+
+The historical sections below describe the state at each local test/deployment; statements such as "not pushed" refer to that stage. Release publication does not convert those checks into a new mixed-DPI, alternate-account or authenticated remote-connection pass. Readiness flags and the unsigned/beta disclosures remain unchanged.
+
+## Network sidebar hover flicker (2026-10-06)
+
+- The maintainer clarified that the remaining left-list issue is flicker/flashing, not selection reverting. The prior draft-preservation fix remains, but did not address native painting: each hover frame invalidated the entire unbuffered ListBox, requesting a background erase; rapid retargeting also restarted the outgoing row at full hover intensity.
+- Owner-drawn rows now paint into a buffer before presentation, using local coordinates for Windows GDI text/focus drawing. Opaque, row-scoped invalidation avoids erasing the list between hover frames. Native ListBox selection, scrolling and accessibility remain in charge. Interrupted fades resume from current per-row values, and animation stops on completion, rebinding, disabling or disposal.
+- All 279 .NET tests pass, including 10 focused cases: atomic row presentation, selection/focus draw states, uninterrupted retarget values, dirty-row bounds with zero observed native background-erase messages during hover, stopped idle animation, reduced motion, rebind/disable reset, scrolled/empty snapshots, visible text on every row and unchanged active edits after 100 hover changes.
+- Native computer-use checks in an isolated in-memory preview with 22 fictional networks confirmed labels throughout the list, selection on lower rows, Down/Home keyboard navigation, wheel scrolling to the end and return to the first network. This check caught and corrected a GDI coordinate issue in the initial buffer implementation. Screenshots verify rendering/layout, not frame-by-frame absence of flicker; the erase-message and atomic-paint tests supply the targeted regression evidence. No personal settings or live connection workflow was used.
+- The self-contained `0.1.1-local.sidebar.20261006` package passes 27 release-tool checks and `--verify-install`. Updated/restarted only the installed companion after verifying management was closed. The previous executable backup and installed/package hashes match; saved companion settings, RustDesk configuration and SVG/ICO hashes are unchanged. All four existing RustDesk processes remained running. GitHub publication was not requested or performed.
+
+## Management draft preservation (2026-10-06)
+
+- Reproduced the defect in an isolated native preview: clicking the already-selected network raised a selection notification, reloaded the editor and discarded an unfinished rename. Switching away and back also discarded drafts, while switching tabs preserved them.
+- Active-network identity now guards repeated notifications. Binding refreshes suppress intermediate selection events, and each network owns an in-memory draft of fields, computers and viewport state while the manager stays open. Save applies only to the selected network and updates existing rows instead of recreating them. New IDs are normalized and locked after a successful save. Closing without saving keeps the existing explicit-discard behavior; README instructions clarify that boundary.
+- All 269 .NET tests pass. Added coverage checks repeated notifications on both pages, preserved text/selection/rows, all network fields, partially entered computers and feedback, per-network current-cell/scroll restoration, saving without rebuilding, new-network rebinding, and isolation of unsaved changes. Existing simulated connection tests also revisit a draft before testing it.
+- Native checks with fictional in-memory data confirmed that the previously failing same-network click retains the rename, switching networks and returning retains it, and saving leaves the row identities intact. No live settings, credentials or RustDesk sessions were used in these checks. This is not a new authenticated-connection, Windows DPI or clean-install pass.
+- The self-contained `0.1.1-local.drafts.20261006` package passes 27 release-tool checks and `--verify-install`. After the maintainer saved and closed management, updated/restarted only the companion with a verified previous-executable backup and matching installed/package executable hashes. Saved companion settings, RustDesk configuration and SVG/ICO hashes stayed unchanged; all four RustDesk processes remained running. GitHub branches and releases were not changed.
+
+## Adjustable UI size regression coverage (2026-10-06)
+
+- All 238 automated tests pass. The default is 75%, with a shared 50–150% preference. Tests cover all five representative sizes, fixed-size slider controls, legacy/out-of-range settings and saving only the preference without changing computer/network data.
+- A fixed two-column layout replaces the noninteractive sidebar splitter. This removes the SplitterDistance exception seen during the experimental scaling preview. Native grid editing also tolerates intermediate narrow columns while layout settles.
+- An 18-transition regression preserves an unfinished name edit and verifies final editing width, contained actions, tab selection/accessibility and save behavior. Scaling no longer reloads the selected network and discards drafts.
+- Native inspection found that network-field rows retained their previous height after shrinking. Fields now report their scaled preferred height, with a regression checking all fields and the lower hint remain contained through repeated 50–150% changes.
+- Retested the native settings window at 75%, 150%, 50% and back to 75%, including keyboard slider operation and tab selection. All fields and actions remained visible, the slider stayed the same size, and no exception dialog appeared. These previews use fictional in-memory data and a fake launcher.
+- The self-contained `0.1.1-local.scale.20261006` build passes all 27 release-tool checks and its executable self-check. After the maintainer saved and closed the installed editor, updated/restarted the companion with a verified recoverable backup. The installed executable matches the tested package; companion settings, RustDesk configuration and both icon masters/outputs retained their hashes. All four original RustDesk processes stayed running. The installed main window was inspected at its 75% default.
+- These checks do not establish a new real Windows high-DPI, mixed-monitor, clean-install or authenticated-connection result. Existing release-readiness gates remain unchanged.
+
+## Approved grouped-row design (2026-10-06)
+
+- Implemented the approved mockup's hierarchy: flat headerless dashboard, names over muted IDs, quiet route labels, solid-blue Connect actions and an outlined management action. Management uses a light network sidebar and quieter segmented tabs with inline computer entry. The approved icon master is unchanged.
+- Native preview checks at the current display scale covered both windows, network settings, inline name/ID entry, Tab navigation, a simulated per-row test, normalized-ID saving and editing an existing name. The focused field border and footer spacing were corrected after screenshot inspection. The preview uses fictional in-memory settings and a fake launcher; it cannot modify personal configuration or initiate a remote session.
+- New regression coverage checks accessible grouped identities, ID formatting, headerless lists, footer containment, short-list sizing, preserving user-resized windows, arrow-key section selection and the native editing field's containment. Existing draft, validation, connection-workflow, long-list/name and resizing tests remain part of the suite.
+- All 229 tests pass, with no skipped tests. The self-contained `0.1.1-local.design.20261006` package passes its executable self-check and all 27 release-tool checks. Fictional-data dashboard and management previews are included in the README.
+- After the maintainer saved and closed the installed editor, updated and restarted only RustDeskHop with a recoverable backup. The installed executable matches the checked package and the backup matches the previous executable. Saved companion settings, RustDesk configuration, master SVG and installed ICO retained their hashes; all four existing RustDesk processes remained running. Inspected the installed grouped-row dashboard after restart.
+- No new high-DPI/mixed-monitor, authenticated-connection, clean-install, signing or release-readiness claim is made. GitHub publication is not part of this local design update.
+
+## Row-local computer actions and compact footer (2026-10-06)
+
+- All 220 tests pass. New coverage checks clicked-row targeting rather than current selection, preserving another row's edits when removing a draft, Enter/Space activation, the non-data Add row, and showing Delete network only in Network settings. Populated computer editors start at the table with no visible instruction label; the secondary management button renders blue text on white. Existing layout, long-label/list, validation and connection-workflow coverage remains green.
+- Compared renders of separate and integrated footer variants using fictional data. Selected the separate bordered management button, an 8-pixel list-to-action gap and a 900-by-280 default client area (60 pixels shorter). Outer page margins remain 20 logical pixels. Connect button styling and icon artwork are unchanged.
+- Each computer has Test and Remove actions. A final Add computer row creates editable fields without another window; no separate computer-action bar remains. Network deletion is confined to Network settings, with an explicit label. Drafts still require Save network.
+- Native preview checks at the current display scale confirmed visible keyboard focus, Enter opening management, and the Computers tab without introductory copy. Added a fictional row, entered its name and grouped numeric ID, used Tab then Enter to start its simulated Test, observed the pending state and truthful launch-only feedback, and saved the normalized ID. The preview uses in-memory fictional settings and a simulated connection workflow; no authenticated remote connection, network discovery or new high-DPI result is claimed.
+- The self-contained `0.1.1-local.rows.20261006` build passes its executable self-check and all 27 release-tool checks. Updated and restarted the existing local installation with a recoverable backup. Installed/package executable hashes match; the backup matches the previous build. Companion settings, RustDesk configuration, the master SVG and generated icon are unchanged, and all four existing RustDesk processes stayed running. Observed the installed main window and row-based Computers tab after restart; no GitHub publication was performed.
+
+## Inline setup and title-free layout (2026-10-06)
+
+- 212 tests pass, including row insertion without a dialog, repeated Add focusing an incomplete row, editable new/read-only saved IDs, atomic save, draft discard, duplicate and malformed-ID feedback, and numeric-ID normalization.
+- Test connection uses unsaved computer/network snapshots and the management window as dialog owner. Tests verify no settings writes, no duplicate launch while pending, blocked editor close/navigation, restoration after every outcome and truthful launch-only feedback. Invalid IDs are rejected before public preparation/login side effects.
+- The dashboard has no content title, uses solid-blue row actions, has a roomier default size and places Manage computers & networks below the list. Page margins and field/action gaps use shared tokens. Existing minimum/default/large-window, long-list and containment checks pass.
+- Native UI inspection used an isolated in-memory preview with fictional computers and a simulated launcher. Entered a computer name directly in the added row, used Tab to enter a grouped numeric ID, checked the disabled Opening state and truthful launch-only feedback, then saved and confirmed the normalized ID and correct network on the dashboard. No Add computer popup opened. This is not a successful authenticated connection test and does not modify personal settings.
+- The self-contained build `0.1.1-local.inline.20261006` passes its executable self-check and all 27 release-tool checks. The dashboard image was regenerated from fictional data. Current icon artwork is unchanged.
+- With the user's restart confirmation, deployed this build to the existing local installation and reopened it. The installed executable matches the checked build, the previous executable matches its recoverable backup, and the icon hash is unchanged. Saved companion settings and RustDesk configuration hashes were unchanged during deployment; all four existing RustDesk processes remained running. The updated management window was observed after restart and left open for the user. No GitHub publication was performed.
+- README setup steps and the fictional-data dashboard image describe inline adding and the limits of Test connection. Real high-DPI/mixed-monitor, clean-install and remote-authentication checks remain separate.
+
+## Compact interface validation (2026-10-06)
+
+- 191 automated tests pass. The updated dashboard is checked at 680×300, 740×480, default and larger sizes, with repeated resizing, long labels and scrolling. Both network-management tabs are checked for contained controls, including 60-computer lists.
+- Row-button clicks, Enter and Space delegate to the corresponding computer, not a stale selection. Pending launches reject duplicate requests and restore controls after started, cancelled, blocked and failed outcomes.
+- Draft-model tests cover scoped add/rename/remove, duplicate-ID rejection within a network (the same ID in different networks is allowed), atomic validation, reload/discard and preserving unrelated computers. Existing persistence and label-editing tests still pass.
+- Used native computer automation to inspect the real main window, row-specific Opening… state, network settings, Computers tab and Add computer dialog in an isolated in-memory preview. No personal configuration or RustDesk process is used by that preview.
+- In that preview, added a fictional computer to a private network using Name → Tab → RustDesk ID → Enter, saved the network and confirmed the new row retained its private route on the main screen.
+- The self-contained Windows build passes its executable self-check and all 27 release-tool checks. Generated icon and SVG hashes match the installed version exactly. README instructions and its fictional-data dashboard image describe this revision.
+- These checks use the current 100% display scale. They do not establish new high-DPI/mixed-monitor, clean-install or authenticated remote-connection results. Previous release-readiness limitations remain open.
+- With the user's approval, updated and restarted only the installed companion as `0.1.1-local.ux.20261006`, keeping a recoverable backup. Its executable matches the checked build; companion settings and RustDesk configuration hashes stayed unchanged, and all four existing RustDesk processes remained running. No GitHub publication is part of this local deployment.
+
 ## Automated coverage
 
 - Production configuration parsing, validation, no-write startup, atomic save and damaged-file recovery.
@@ -24,6 +94,54 @@ The optional-signing policy update expands the release-tool suite to 27 checks (
 - The new editor is contained at 780×530, 900×580 and 1920×1040 in automated layout tests. Existing network-field containment and unchanged dashboard-control tests also pass.
 - Inspected both Manage networks sections on the live Windows desktop at the existing 100% scale. Edited a saved private computer's label, tabbed to the read-only ID, saved using the existing Save network button and closed the dialog. The dashboard showed the updated name. A before/after comparison confirmed that only that label changed; IDs, profile assignments and network definitions were preserved. Existing RustDesk processes remained running.
 - No additional high-DPI/mixed-monitor or authenticated connection checks are claimed for this label-only change. The readiness gates remain unchanged.
+
+## Local structural-refactor evidence (2026-09-30)
+
+The baseline suite passed all 142 tests before the refactor. The composed application passes 184 tests: existing routing, recovery, persistence, branding and layout coverage plus 42 cases for the real connection workflow with fake side effects, shared address parsing and main-window workflow delegation. Cases cover consent refusal, unknown defaults, failed preparation, default changes during sign-in, VPN retries, missing clients, launch failures and duplicate-request prevention.
+
+The fictional-data dashboard PNG and generated ICO are each byte-identical to their baseline counterparts. This is rendering regression evidence, not a live authenticated connection test. The self-contained publish layout and executable `--verify-install` check passed, as did all 27 release-tool checks. The source project and build/release paths now use `src/RustDeskHop/RustDeskHop.csproj`.
+
+The installed app, user settings and live RustDesk sessions were not updated or restarted. No new installer build/install, UAC, remote authentication, cross-version or high-DPI pass is claimed; an Inno Setup compiler was not available in the checked local locations. The existing readiness flags remain unchanged. This is local validation, not a new published release.
+
+## Local convention-migration evidence (2026-09-30)
+
+The portable personal conventions were applied to 80 owned C# files, including the app, tests and branding utility. The shared `.editorconfig` and `RustDeskHop.slnx.DotSettings` contain no machine paths, Unity requirements or project-specific logging analyzers. No formatter package, build-time formatting or on-save hook was added.
+
+- All 184 .NET tests passed after the migration, with no skipped tests. The self-contained Windows publish, published EXE `--verify-install` self-check and all 27 release-tool checks passed.
+- The seven previously approved wrapping fixtures passed against this repository's settings: 119/120-character calls stay compact, 121-character calls wrap, nested calls align and close on separate lines, comments and formatter-off regions survive, and a second formatting pass is unchanged.
+- All 80 C# files are stable on repeat formatting. Syntax/naming checks passed; string-literal values and enum member order/values were preserved. The 120-character width remains a target, with long indivisible literals allowed.
+- The fictional-data dashboard PNG and generated ICO each have exactly the same SHA-256 hash as the pre-migration files. JSON names, the saved-settings location and installer identity remain unchanged.
+
+These are local checks, not a release or a new hands-on remote-connection/DPI/installer pass. HoloHelmet checkouts, installed applications, live sessions, saved RustDesk/RustDeskHop configuration and release-readiness gates were not changed by this migration.
+
+## Page tabs and direct-connect navigation (2026-10-06)
+
+### Unified tab-strip follow-up
+
+- All 261 .NET tests pass. The two headers now fill one continuous frame, with rounded outer corners and a blue active-page underline. New tests verify connected geometry, no width/height jumps, label containment at six internal densities (50–150%), and the selected indicator on either side.
+- Native screenshots verified both pages at the laptop's unchanged display scale. Actual arrow-key testing caught WinForms treating Left/Right as dialog-focus movement; tab headers now claim those input keys. Retesting confirmed that Left/Right changes both focus and the selected page. Ctrl+Tab and the visible focus ring were also inspected. Existing content transitions and hover feedback are retained.
+- The self-contained `0.1.1-local.unifiedtabs.20261006` build passes all 27 release-tool checks and its `--verify-install` self-check. The README management image uses fictional data rendered by production controls. No real remote connection, new Windows DPI or clean-install claim is made.
+- After the maintainer saved and closed management, updated/restarted only the installed companion. Verified the recoverable previous-executable backup and installed/package match. Companion settings, RustDesk configuration, SVG and ICO hashes stayed unchanged; all four existing RustDesk processes remained running.
+- This follow-up remains local; no GitHub push or release was requested.
+
+The preceding fixed-size/motion version was merged into develop through [PR #41](https://github.com/Deucarian/RustDeskHop/pull/41). Its [required Windows check](https://github.com/Deucarian/RustDeskHop/actions/runs/37472262064) passed after making a synthetic cursor test use explicit action/field targets rather than depending on desktop cursor state outside the grid. Main was not changed.
+
+This subsequent refinement is local on `feature/clear-tabs-and-direct-connect`:
+
+- All 254 .NET tests pass. New cases cover the open active-tab edge/shared divider, no persistent selected rows or cells, no name double-click action, forward/backward Connect-button navigation through both native key-processing paths, and exactly-once Enter/Space activation. Existing draft, motion, fixed-size and connection-workflow tests remain in place.
+- Native fictional-data checks verified direct Tab movement between Connect buttons and out to management, opening management by keyboard, the page-tab appearance on both pages, and Ctrl+Tab with visible focus. Pointer hover remains transient; it is not row selection. The installed dashboard was inspected after restart with no selected row.
+- The self-contained `0.1.1-local.tabs.20261006` package passed 27 release-tool checks and `--verify-install`. Only the installed companion was restarted, with a verified old-executable backup and matching installed/published hashes. Saved companion settings, `RustDesk2.toml` and logo hashes stayed unchanged during deployment; all existing RustDesk processes remained running.
+- No real remote connection, fresh-user installation, high-DPI or mixed-monitor test is claimed for this refinement. It has not been pushed or released. Readiness flags remain unchanged; documentation screenshots contain fictional data only.
+
+## Fixed-size interface and motion validation (2026-10-06)
+
+The former 90% slider setting is now the shared design density, with no slider or persisted user-scale setting. Older scale fields are ignored on load without writing the settings file. All companion forms have matching minimum/maximum sizes and disabled resizing/maximizing; lists scroll within them. Windows DPI remains independent.
+
+- All 248 .NET tests pass locally. Coverage includes fixed sizes for the dashboard, manager and sign-in window; legacy preferences; repeated internal scaling while editing; rapid tab changes preserving drafts; hover-action targeting; animation retargeting, cancellation, disposal and idle timers; keyboard focus after inline Add; and stable computer/network row identities. Reduced motion is tested through the animation-policy seam, not by changing this laptop's Windows settings.
+- Native preview checks at the laptop's existing display scale: no slider, blue-outline tabs matching Test, readable network fields, fixed dashboard dimensions after an attempted border drag, inline Add/name/ID entry, Tab navigation, simulated Test/loading/result feedback, saving a new row and adding a network with list/page transitions. The preview uses fictional data, an in-memory settings store and a fake connection launcher; it does not prove a real remote connection.
+- The self-contained `0.1.1-local.motion.20261006` package passed all 27 release-tool checks and `--verify-install`. Updated/restarted only the installed companion after verifying that no editor was open. Verified the old executable backup, installed/published executable equality, unchanged saved settings, `RustDesk2.toml` and logo hashes, and the continued presence of all existing RustDesk processes. The installed dashboard was inspected again with its three existing computers, no slider and disabled maximize. This is a local build from the working tree, not a GitHub publication.
+- Documentation images are rendered from production controls with fictional data. Live screenshots containing real computer identifiers are not added to the repository.
+- Real 125/150/200%, mixed-monitor and small-work-area checks remain pending for this revision. No clean-user install, authentication/UAC, cross-version connection or public release is claimed. The existing release-readiness flags stay unchanged.
 
 ## Required hands-on checks (not yet complete)
 

@@ -33,10 +33,10 @@ jobs:
       - name: Test
         run: dotnet test tests/RustDeskHop.Tests/RustDeskHop.Tests.csproj -c Release
       - name: Publish
-        run: dotnet publish RustDeskCompanion.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -p:Version=${{ env.RELEASE_VERSION }} --output publish
+        run: dotnet publish src/RustDeskHop/RustDeskHop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -p:Version=${{ env.RELEASE_VERSION }} --output publish
       - name: Collect notices from resolved runtime packages
         shell: pwsh
-        run: ./tools/Collect-ReleaseNotices.ps1 -AssetsFile obj/project.assets.json -PublishDirectory publish -InnoCompilerDirectory "${env:ProgramFiles(x86)}\Inno Setup 6"
+        run: ./tools/Collect-ReleaseNotices.ps1 -AssetsFile src/RustDeskHop/obj/project.assets.json -PublishDirectory publish -InnoCompilerDirectory "${env:ProgramFiles(x86)}\Inno Setup 6"
       - name: Upload application for approved signing
         id: unsigned-app
         if: vars.SIGNPATH_ENABLED == 'true'

@@ -13,7 +13,8 @@ RustDeskHop is an independent, community-driven companion for RustDesk, maintain
 1. Use **Windows 11 x64** with a separately installed RustDesk. Other operating systems/architectures are not supported by this companion release; a .NET installation is not needed for self-contained downloads.
 2. Open [Releases](https://github.com/Deucarian/RustDeskHop/releases). Prefer the versioned **installer** or **portable ZIP** from the same release. Installer support is introduced by the readiness changes; old releases do not gain it retroactively.
 3. The installer creates a Start Menu shortcut for your account. Startup/desktop shortcuts are optional and default off. It does not install or stop RustDesk. Choose your install directory during setup.
-4. In RustDeskHop, use **Manage networks**, then **Add computer**, then select a computer and **Connect**. Have a working private-network/VPN route when needed.
+4. Open **Manage computers & networks**, select a network (RustDesk Public is included by default), then choose the **+ Add computer** row in **Computers**. Type its name and RustDesk ID directly in the new row. Optionally choose **Test** on that row before saving. Choose **Save network**, then **Close**.
+5. Click **Connect** beside that computer on the main screen. Private networks also need a working VPN or other route to their server.
 
 Exit RustDeskHop from its tray menu before upgrading; leave RustDesk running. Uninstall via Windows **Installed apps**. Settings and backups are retained. For a portable ZIP, exit the companion, remove only the extracted app folder and any shortcuts you created; retained settings are described below. Never remove RustDesk's own folders as part of companion uninstall.
 
@@ -38,7 +39,7 @@ Without a network-aware launcher, users have to remember which server owns a Rus
 
 The intended workflow is:
 
-1. Select a saved client.
+1. Click **Connect** beside a saved computer.
 2. The companion identifies the required network.
 3. If it differs from the current RustDesk default, a confirmation explains that only the new connection is being routed differently.
 4. Existing sessions remain connected.
@@ -53,9 +54,9 @@ Public outgoing connections require RustDesk's default network to be public. Rus
 For normal day-to-day use:
 
 1. Open **RustDeskHop**.
-2. Select the computer you want to reach.
+2. Find the computer you want to reach.
 3. Check that the displayed network is the one you expect.
-4. Click **Connect** (or press Enter while the computer list is focused).
+4. Click its **Connect** button, or use Tab to focus it and press Enter or Space.
 5. Approve the route confirmation if one appears.
 
 That is the complete switching workflow. RustDeskHop routes the new connection through the network assigned to that computer. You do not need to edit RustDesk's server settings, restart RustDesk, or manually switch between public and private servers. Existing sessions on other networks stay open.
@@ -70,17 +71,35 @@ Before the first connection from a particular PC:
 - Start Tailscale, another VPN, or the required network route before using a private profile.
 - Make sure the destination computer and its RustDesk server are online.
 
-After those one-time steps, future connections should require only selecting the computer and clicking **Connect**.
+After those one-time steps, click **Connect** beside the computer you want to open.
 
 ### The desktop interface
 
 ![RustDeskHop dashboard with fictional sample computers](docs/images/dashboard.png)
 
-*Production controls rendered with fictional data at 100% scaling; this preview is not evidence of a live connection.*
+*Production controls rendered with fictional data at the fixed 90% interface density and 100% Windows display scaling; this preview is not evidence of a live connection.*
 
-The light interface puts the computer list and connection actions in one rounded frame. **Connect** is the single blue primary action; **Add computer**, **Remove**, and **Manage networks** are quieter maintenance actions. A soft selection and neutral Public/Private badges keep the focus on the chosen computer. Default-network information sits in the muted footer. Arrow keys move through the computer list; Enter connects. Longer names wrap and longer lists scroll.
+The main screen is a flat computer list with no title or column headings: each name sits above its muted RustDesk ID, with the saved network and solid-blue **Connect** button on the same row. Thin dividers separate computers. **Manage computers & networks** is an outlined blue-text button at the bottom right, with a small settings symbol inside it. Rows do not stay selected, and clicking or double-clicking a computer name does not connect. Use its **Connect** button. Tab/Shift+Tab move between Connect buttons and the management action; arrow keys navigate the list, and Enter or Space activates the focused connection. Hover feedback is temporary and keyboard focus stays visible on the button. Longer names wrap and longer lists scroll.
 
-The rabbit icon stays in the title bar and taskbar, without a second oversized logo in the content. All windows use real Windows caption controls (minimize, maximize/restore, close), native resizing, snapping and the system menu—not text-symbol imitations. On Windows 11, the title bar blends into the app's light canvas using [Windows' supported caption-colour attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute); older Windows versions retain standard system chrome, and high-contrast mode retains system caption colours. Network settings and the add-computer dialog share the same styling. These presentation changes do not change RustDesk routing or close existing sessions.
+![Computer management with fictional sample data](docs/images/management.png)
+
+Management has a quiet network sidebar and **Computers / Network settings** page tabs in one continuous, full-width strip. A shared frame with rounded outer corners joins both tabs; a blue underline identifies the active page. The blue text and hover feedback use the Test action's palette. Their tab roles, visible keyboard focus, arrow-key navigation and Ctrl+Tab shortcuts remain available. Saved computers use the same grouped name-and-ID layout; new computers get inline name and ID fields. Test and Remove stay beside their own computer, with **+ Add computer** as the final row. Each window keeps a fixed size; longer lists scroll inside it. Both previews use production controls and fictional data, not live remote sessions.
+
+The interface uses the former slider's **90%** size as its fixed design density. The experimental slider is removed, and old saved slider values are ignored without rewriting settings at startup. Windows display scaling still applies independently. Windows cannot be manually resized or maximized; their matching minimum/maximum sizes keep the layout consistent. Unsaved computer/network edits remain drafts until **Save network**.
+
+Buttons, computer rows, network items and editable fields have short hover/focus feedback. Computer and network lists animate changes by item identity, and management pages use a brief fade/slide transition. Keyboard or scroll input ends a content transition immediately; clicks on moving rows dismiss the transition without activating a different row. Motion is disabled when Windows client-area animations are disabled or high contrast is active. Timers stop when idle and animation resources are disposed with their controls.
+
+**Opening…** appears on the clicked row only while the companion prepares and launches RustDesk. It does not claim that the remote session has connected; authentication and session status belong to RustDesk. RustDesk's default can still change outside the companion, so route checks and relevant safety/consent dialogs remain active.
+
+The rabbit icon stays in the title bar and taskbar, without a second oversized logo in the content. Windows retains ownership of the title bar, permitted caption actions and system menu; resize/maximize actions are disabled. On Windows 11, the title bar blends into the app's light canvas using [Windows' supported caption-colour attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute); older Windows versions retain standard system chrome, and high-contrast mode retains system caption colours. The dashboard, management window and sign-in view use the same outer spacing, with shared inner spacing for fields and actions. Adding a computer happens inline rather than in a separate dialog. These presentation changes do not change RustDesk routing or close existing sessions.
+
+### What adding and testing actually do
+
+Adding a computer saves a shortcut; it does not register, install or configure the remote PC. The name is your own label. Its RustDesk ID must belong to the selected RustDesk server, the remote RustDesk service must be running and reachable, and the server/key/VPN settings must be correct. Passwords, account sign-in and remote approval are still handled by RustDesk. Being on the same LAN or Tailscale network alone is not enough. See [RustDesk's client configuration guide](https://rustdesk.com/docs/en/self-host/client-configuration/).
+
+Each computer row has its own **Test** and **Remove** actions. **+ Add computer** is the last row of the list; there is no separate computer-action bar or Add dialog. Enter or Space activates a focused row action. Network deletion is available only in **Network settings**, labelled **Delete network**.
+
+**Test** tries that row using the current network fields, even before saving. It uses the same routing, private-network reachability and public-login safety checks as Connect. It can start the existing VPN/login preparation workflow; any disruptive public preparation still asks for consent. It does not save the row or mark it verified. **Opened in RustDesk** only means the launch succeeded: check for the actual remote desktop in RustDesk to verify authentication and end-to-end access. Offline computers can still be saved without testing.
 
 ### System tray
 
@@ -99,18 +118,19 @@ For reliable unattended incoming access, keep the RustDesk background service in
 - **Public connection asks for login:** complete or renew RustDesk's browser sign-in, then retry from RustDeskHop. A cached token is not proof that RustDesk's server accepts the account. The companion's sign-in dialog waits for a changed saved login, or lets you explicitly choose **Retry connection** after finishing; an unchanged cached token cannot automatically dismiss it.
 - **Private server is unreachable:** confirm the required VPN or Tailscale connection is active and the server is online.
 - **Password prompt appears:** enter the remote computer's password and choose RustDesk's remember option if desired.
-- **Rename a saved computer:** open **Manage networks**, select its network, and open **Computer names**. Edit the name, choose **Save network**, then **Close**. Unsaved edits are discarded when switching networks or closing. Only the RustDeskHop label changes; the RustDesk ID, route, remote hostname and saved authentication remain unchanged. No extra dashboard controls are needed.
-- **Wrong network is shown:** use **Manage networks** or edit the saved client assignment before connecting.
+- **Add, rename or remove a saved computer:** open **Manage computers & networks**, select its network, and open **Computers**. Choose the **+ Add computer** row to insert a computer, enter its name and RustDesk ID, edit an existing name, or choose **Remove** on the relevant row. A new row's ID is editable; saved IDs stay read-only. Choose **Save network**, then **Close**. Add automatically uses the selected network; you do not choose it again. Pasted numeric IDs with spaces are normalized. Missing names/IDs, connection links and new duplicate IDs are rejected inline. Removing an entry does not uninstall RustDesk or disconnect a session.
+- **Unsaved edits:** adding, renaming, removing and network-field changes remain drafts until **Save network**. Switching tabs or networks keeps each network's draft while management stays open; clicking the already-selected network does not reload it. Saving applies only to the selected network, without resetting its computer list or saving other networks' drafts. Closing management still discards anything not saved, so choose **Save network** for each edited network before closing. Renaming changes only the RustDeskHop label, not the ID, route, remote hostname or saved authentication.
+- **Wrong network is shown:** add the computer under its correct network, save, then remove the old entry from the previous network and save again. An ID can exist in different networks, but Add rejects duplicates within one network. Remove and save a network's computers before deleting that network.
 
 ## Configuration
 
-On first run, use **Manage networks** and **Add computer** to configure the profiles and IDs for your environment. Settings are stored in:
+On first run, RustDesk Public is already available. Use **Manage computers & networks** to configure other networks, then add IDs in the selected network's **Computers** tab. Settings are stored in:
 
 ```text
 %APPDATA%\SimultriaRustDeskCompanion\settings.json
 ```
 
-The public repository intentionally contains only generic defaults. A developer-specific `settings.local.json` may be placed beside the project file; it is ignored by Git and copied to the build output for local development.
+The public repository intentionally contains only generic defaults. A developer-specific `settings.local.json` may be placed in the repository root; it is ignored by Git and copied to the build output for local development.
 
 Developer seed files are explicitly excluded from `dotnet publish`. Distribution validation rejects settings/TOML files, private-key containers and test-only assemblies.
 
@@ -127,21 +147,59 @@ Private-server probes support DNS names, IPv4 and IPv6 (including `[IPv6]:port` 
 Install the .NET 10 LTS SDK selected by `global.json`. No signing account, certificate, proprietary license, RustDesk artwork download, or paid tool is required to build from source.
 
 ```powershell
-dotnet build RustDeskCompanion.csproj -c Release
+dotnet build src/RustDeskHop/RustDeskHop.csproj -c Release
 dotnet test tests\RustDeskHop.Tests\RustDeskHop.Tests.csproj -c Release
 ```
 
-The executable is produced under `bin\Release\net10.0-windows\`.
+The executable is produced under `src\RustDeskHop\bin\Release\net10.0-windows\`. Open `RustDeskHop.slnx` to work on the app and tests together; `dotnet test RustDeskHop.slnx -c Release` runs the suite from the repository root.
 
 To build a self-contained distribution with notices:
 
 ```powershell
-dotnet publish RustDeskCompanion.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output publish
-./tools/Collect-ReleaseNotices.ps1 -AssetsFile obj/project.assets.json -PublishDirectory publish
+dotnet publish src/RustDeskHop/RustDeskHop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output publish
+./tools/Collect-ReleaseNotices.ps1 -AssetsFile src/RustDeskHop/obj/project.assets.json -PublishDirectory publish
 ./tools/Test-Publish.ps1 -PublishDirectory publish
 ```
 
 For an installer, install the open-source Inno Setup compiler (6.4+), rerun the notice collector with `-InnoCompilerDirectory <compiler-folder>`, then run `./tools/Build-Installer.ps1 -PublishDirectory publish -OutputDirectory installer -Version <version> -Compiler <ISCC.exe-path>`. The installer script is public in `packaging/`; no additional EULA is imposed. CI runs install/upgrade/uninstall smoke tests only on disposable runners, never against your live installation.
+
+### Code structure and composition
+
+One application project produces one executable. There is no dependency-injection framework, service locator or extra background service.
+
+```text
+src/RustDeskHop/
+  Program.cs                   Startup and command dispatch
+  ApplicationComposition.cs   Wires the production dependencies
+  Models/                      Saved computers and network profiles
+  Connections/                 Workflows, small interfaces and route rules
+  Integrations/
+    RustDesk/                  Configuration, processes and elevated recovery
+    Tailscale/                 Installed VPN client adapter
+    Networking/                TCP reachability adapter
+  Settings/                    Validated JSON persistence and backups
+  UI/                          Forms, controls, shared theme and tray
+  Branding/                    Shared generated icon resources
+
+Assets/                        Single editable SVG icon
+build/                         Branding and distribution MSBuild targets
+tests/                         Isolated workflow, persistence and WinForms tests
+tools/                         Build, packaging and validation scripts
+packaging/                     Windows installer definition
+docs/                          Readiness, branding and signing records
+```
+
+`ApplicationComposition` constructs the adapters and injects them through constructors. The main window delegates connection requests to `ConnectionCoordinator`, which composes private-network access and public sign-in. Those workflows depend on small interfaces, not concrete Windows integrations or controls. Dialogs and status updates belong to `WinFormsConnectionInteraction`; the sign-in form receives its client and account-state dependencies.
+
+Normal launch operations and disruptive public-profile preparation have separate interfaces. Only the confirmed public-preparation path can enter the session-close/elevated adapter. Backup/rollback logic lives separately in `PublicProfileTransaction`. The public route is checked again immediately before launch, after any probe, preparation or sign-in dialog. One address parser serves both route detection and reachability; malformed endpoints fail closed.
+
+Pure data/routing rules do not need interfaces. Interfaces are used at workflow and external-side-effect boundaries where tests need substitution. UI tests use in-memory settings and fake clients, while workflow tests compose the real services with fake probes, VPN state, preparation and user decisions. They do not authenticate, change live RustDesk configuration or close real sessions.
+
+Compatibility contracts are intentional: the executable remains `RustDeskHop.exe`, the settings schema and `%APPDATA%\SimultriaRustDeskCompanion\settings.json` location remain unchanged, and `Assets/RustDeskHop.svg` remains the only editable icon. Internal namespace/project renaming must not become an accidental user-data migration.
+
+### Code conventions
+
+C# code uses the maintainer's portable conventions: explicit types, block-scoped namespaces, consistent naming and class sections, and a 120-character formatting target with aligned wrapped arguments. The rules are checked in as `.editorconfig` and `RustDeskHop.slnx.DotSettings`; no extra formatter installation or wrapping while typing is required. See [contributing: C# conventions](CONTRIBUTING.md#c-conventions) for examples of naming, compatibility exceptions and editor support.
 
 ### Application icon
 
@@ -173,7 +231,9 @@ Use the **Bug report** template for reproducible defects. Anyone with a GitHub a
 
 ## Downloads
 
-The latest public release is always available from the stable link below:
+The current public-testing version is [RustDeskHop v0.1.1-beta.4](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.4), with the redesigned interface, preserved management drafts and sidebar flicker fix. Choose the versioned installer or portable ZIP on that release page. It remains an unsigned beta; the validation and branding limitations above still apply.
+
+GitHub's stable-release link below excludes beta releases and may therefore point to an older version:
 
 <https://github.com/Deucarian/RustDeskHop/releases/latest>
 

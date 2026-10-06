@@ -1,5 +1,111 @@
 # TODO
 
+## Stop left network-list hover flicker (2026-10-06)
+
+- [x] Buffer complete owner-drawn rows and invalidate only changing visible rows without native background erasure; preserve native selection, scrolling and accessibility.
+- [x] Continue interrupted hover fades from their current values instead of flashing the outgoing item at full intensity.
+- [x] Pass 279 automated tests, including 10 targeted rendering/animation cases; inspect long-list labels, selection, scrolling and keyboard navigation in an isolated native preview.
+- [x] Pass 27 release-tool checks and the executable self-check, then restart only the installed companion with a verified backup, unchanged settings/branding and all four existing RustDesk processes preserved.
+
+## Preserve management drafts and view state (2026-10-06)
+
+- [x] Ignore repeated selection notifications for the active network instead of rebuilding its editor.
+- [x] Keep separate computer/network-field drafts while switching networks, including incomplete rows, feedback and computer scroll/current-cell position.
+- [x] Suppress transient rebinding events and save only the selected network; normalize newly saved IDs and make them read-only without replacing rows.
+- [x] Pass 269 automated tests, including repeated selection, cross-network draft isolation, partial entry, saving/rebinding, viewport restoration and unchanged close-without-save behavior.
+- [x] Verify the native click reproduction, pass 27 release-tool checks and the executable self-check, then update/restart the installed companion with a recoverable backup. Saved settings, logo and RustDesk sessions remain unchanged.
+
+## Clear page tabs and direct home-screen actions (2026-10-06)
+
+- [x] Publish the preceding fixed-size/motion version to develop through [PR #41](https://github.com/Deucarian/RustDeskHop/pull/41) after the required GitHub checks pass.
+- [x] Join the management tabs into one full-width strip with a shared frame, rounded outer corners, no gaps and a blue active-page underline. Keep the existing blue palette, hover feedback and keyboard navigation.
+- [x] Remove persistent home-screen row/cell selection and name double-click actions; retain temporary hover feedback and focus on Connect buttons.
+- [x] Keep keyboard connection access, forward/backward Tab navigation and exactly-once Enter/Space activation.
+- [x] Validate the unified tab strip with 261 tests and native screenshot/keyboard checks; fix arrow keys moving focus without selecting the page.
+- [x] Pass 254 tests, 27 release-tool checks and the packaged self-check; verify native Tab navigation/page switching and update/restart the installed companion with a backup, preserving settings, logo and existing RustDesk processes.
+- Publication requested for develop and main as `v0.1.1-beta.4`; required pull-request and tagged-release checks must pass before publication is complete. See [Releases](https://github.com/Deucarian/RustDeskHop/releases).
+
+## Fixed 90% size and consistent motion (2026-10-06)
+
+- [x] Remove the experimental slider and saved scale preference; use the former 90% size as the shared design density without altering existing settings on startup.
+- [x] Match management tabs to the blue-outline Test palette, with a quiet selected fill and accessible selection state.
+- [x] Fix each companion window's minimum and maximum size; disable manual resizing/maximizing and keep long lists scrollable.
+- [x] Share hover/focus/press feedback across buttons, row actions, editable fields and network items; animate list reflows and management-page changes.
+- [x] Respect Windows reduced motion/high contrast, stop idle timers, dispose animation resources and preserve drafts through rapid page changes.
+- [x] Pass 248 automated tests, including animation lifecycle, inline-editor focus, network-list identity and fixed-size regression coverage.
+- [x] Inspect native entry, keyboard navigation, simulated Test/save, network addition and final installed dashboard; pass 27 release-tool checks and the packaged self-check, then update/restart only RustDeskHop with a verified backup and unchanged settings/logo/RustDesk processes.
+- [ ] Repeat real high-DPI/mixed-monitor and small-work-area checks; the current-screen checks do not establish that matrix.
+- [x] Publish the fixed-size/motion follow-up to develop through PR #41; main remains unchanged.
+
+## Adjustable UI size and management tabs (2026-10-06)
+
+- [x] Default the interface to 75%; offer a shared 50–150% slider that stays at its own normal size and remembers the chosen setting without changing Windows or RustDesk.
+- [x] Keep typography, rows, fields, actions and spacing proportional; preserve unsaved edits through repeated size changes.
+- [x] Fix segmented-tab selection/hover styling and keyboard focus; replace the fixed sidebar's splitter with a two-column layout to prevent the repeated SplitterDistance exception.
+- [x] Pass all 238 automated tests, including 18 repeated scaling transitions while editing, preference-only persistence and shrinking network fields after growing them.
+- [x] Verify native 50%, 75% and 150% layouts, pass 27 release-tool checks and the packaged self-check, then update/restart only the installed companion with a recoverable backup.
+- [ ] Merge the approved UI and dependent refactor/conventions into develop after the required remote build passes; main and versioned releases remain outside this request.
+- [ ] Complete the outstanding real high-DPI/mixed-monitor matrix; app zoom tests are not a substitute.
+
+## Approved grouped-row design (2026-10-06)
+
+- [x] Match the approved visual direction: flat white dashboard, names above muted IDs, thin dividers, quiet network labels and solid-blue Connect buttons.
+- [x] Use a light sidebar and quiet segmented selector in management; keep inline Add, row-local Test/Remove, and existing save/validation behaviour.
+- [x] Balance shared spacing, fit short lists, preserve manual resizing, and fix footer overlap and inline editing borders.
+- [x] Preserve the approved logo, native window controls and accessible names/IDs; inspect native entry, keyboard navigation, saved rows and network settings with isolated fictional data.
+- [x] Pass all 229 automated tests, 27 release-tool checks and the packaged executable self-check.
+- [x] Update and restart the installed companion with a verified backup, keeping saved configuration, the icon and existing RustDesk processes unchanged.
+- [ ] Finish this revision's real high-DPI/mixed-monitor pass; current-scale native checks and automated resizing do not replace it.
+- [ ] Publish the local UI/refactor/conventions work only when requested.
+
+## Quieter computer setup and clearer management action (2026-10-06)
+
+- [x] Remove the Computers tab's persistent instructions; retain useful empty states and validation/test feedback only when needed.
+- [x] Compare a separate compact footer with an integrated list-panel footer, keeping the separate white, blue-text management button. Keep solid-blue Connect buttons and the current logo.
+- [x] Reduce default window height by 60 pixels and the list-to-button gap to the shared 8-pixel spacing; preserve consistent 20-pixel page margins and resizable/scrollable lists.
+- [x] Put Test and Remove on each computer row and Add computer in a final list row. Keep network deletion in Network settings only, with an explicit label.
+- [x] Cover clicked-row targeting, draft preservation, keyboard activation and empty-list saves alongside instruction-free layout, button rendering and compact spacing.
+- [x] Pass all 220 tests, 27 release-tool checks and the executable self-check. Inspect the native row actions, then update/restart the installed companion with a backup while preserving settings, icon and RustDesk processes.
+- [ ] Complete the outstanding real high-DPI/mixed-monitor matrix; current-scale checks are not a substitute.
+
+## Inline computer setup and simpler main screen (2026-10-06)
+
+- [x] Remove the main page title, restore solid-blue Connect buttons, move the clearer Manage computers & networks action below the list, and provide a roomier default window.
+- [x] Standardize outer margins and field/action spacing through shared metrics; open management directly to Computers.
+- [x] Replace the Add computer popup with a focused editable row. Validate names/IDs/duplicates inline and normalize copied numeric IDs.
+- [x] Offer Test connection for saved or unsaved rows using the existing connection workflow, without saving or claiming end-to-end success.
+- [x] Pass 212 tests, including inline entry, read-only saved IDs, isolated test snapshots, pending-test locking, all outcomes and validation before login/setup side effects.
+- [x] Check inline name/ID entry, simulated-test feedback, saving and the resulting main-screen row in the native preview; pass the packaged self-check and all 27 release-tool checks.
+- [x] Deploy and restart the installed companion after confirmation, retaining a verified backup and preserving settings, the current icon and all existing RustDesk processes.
+- [ ] Repeat real high-DPI/mixed-monitor checks for this layout. Automated resizing at the current scale does not replace that matrix.
+
+## Compact computer-first interface (2026-10-06)
+
+- [x] Replace the dashboard subtitle, selection/action panel and routine footer with per-row Connect buttons.
+- [x] Align the Computers title and Manage networks on one centerline; tighten page, list-header and row spacing.
+- [x] Move Add/Remove into Manage networks → selected network → Computers. Keep edits as drafts until Save network, preassign new computers to that network, and reject duplicate IDs within it.
+- [x] Keep route safety/consent checks and the existing logo; show only temporary Opening… progress, not unverified connection success.
+- [x] Pass 191 automated tests, 27 release-tool checks and the packaged self-check; inspect the native windows with isolated fictional data at the current display scale.
+- [x] With approval, update/restart the installed companion with a recoverable backup; verify saved settings and RustDesk configuration are unchanged and existing RustDesk processes remain running.
+- [ ] Recheck the changed layout at real 125/150/200% scaling and across mixed-DPI monitors; prior DPI results are not evidence for this revision.
+- [ ] Publish the UI changes and the existing local refactor/conventions work through the normal review/release process when requested.
+
+## Personal C# conventions (2026-09-30)
+
+- [x] Adopt portable naming, explicit types, block-scoped namespaces and member sections throughout the owned app, tests and branding utility.
+- [x] Check in self-contained EditorConfig and Rider/ReSharper layout settings with the approved 120-character aligned wrapping; keep wrapping while typing disabled and add no formatter dependency or automatic formatting hooks.
+- [x] Verify all 184 tests, 27 release-tool checks and the published executable self-check; reproduce the seven approved wrapping examples, confirm repeat-format stability and preserve the dashboard/icon bytes.
+- [ ] Publish these conventions together with the local composition refactor through the normal review/release process when requested.
+
+## Composed application structure (2026-09-30)
+
+- [x] Move application code into a single `src/RustDeskHop` project with a root solution, focused models/UI/integrations/settings folders and a constructor-based composition root.
+- [x] Extract connection coordination, private-network readiness and public sign-in from the main window; isolate disruptive preparation from ordinary launching.
+- [x] Split elevated command handling from the backup/rollback transaction and share host parsing between route detection and probes.
+- [x] Preserve the settings path/schema, installer identity and single SVG master; update build/release paths and developer instructions.
+- [x] Pass all 184 tests (142 baseline plus 42 new workflow, address-consistency and UI-delegation cases). The fictional-data dashboard render is byte-identical to the baseline.
+- [ ] Promote this local refactor through the normal develop/main review and release process when requested; no new release or live deployment is implied by these checks.
+
 ## Computer-label editing (2026-09-30)
 
 - [x] Keep renaming inside Manage networks: select a network, open Computer names, edit labels, then use the existing Save network and Close controls. No new dashboard buttons or context menus.
