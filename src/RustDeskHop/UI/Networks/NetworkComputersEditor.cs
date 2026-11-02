@@ -55,7 +55,7 @@ namespace RustDeskHop.UI
             RestoreDraftView();
         }
 
-        internal bool TrySave(out string? error)
+        internal bool TrySave(out string? error, Func<List<TargetDefinition>, bool>? persist = null)
         {
             EndEdit();
             if (!ValidateRows(true))
@@ -63,7 +63,7 @@ namespace RustDeskHop.UI
                 error = _feedback.Text;
                 return false;
             }
-            bool saved = _drafts.TrySave(_targets, out error);
+            bool saved = _drafts.TrySave(_targets, out error, persist);
             if (saved)
                 RefreshSavedRows();
             ShowFeedback(error ?? "");

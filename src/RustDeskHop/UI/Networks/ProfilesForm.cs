@@ -27,6 +27,8 @@ namespace RustDeskHop.UI
         private readonly List<ServerProfile> _profiles;
         private readonly NetworkComputersEditor _computers;
         private readonly Func<IWin32Window, TargetDefinition, ServerProfile, Task<ConnectionOutcome>>? _testConnection;
+        private readonly Func<IWin32Window, AppSettings, bool>? _saveSettings;
+        private readonly HashSet<string> _newProfileIds = [];
         private bool _testing;
         private int _selectedIndex = -1;
         private SectionTabs _sections = null!;
@@ -41,9 +43,11 @@ namespace RustDeskHop.UI
         public ProfilesForm(IEnumerable<ServerProfile> source,
                             IEnumerable<TargetDefinition>? targets = null,
                             Func<IWin32Window, TargetDefinition, ServerProfile, Task<ConnectionOutcome>>?
-                                testConnection = null)
+                                testConnection = null,
+                            Func<IWin32Window, AppSettings, bool>? saveSettings = null)
         {
             _testConnection = testConnection;
+            _saveSettings = saveSettings;
             _networkListTransition = new ContentTransition(_profileList);
             _computers = new NetworkComputersEditor(testConnection is null ? null : TestComputerAsync);
             _profiles = source.Select(Clone).ToList();
@@ -241,7 +245,7 @@ namespace RustDeskHop.UI
             {
                 Text = "Close",
                 MinimumSize = new Size(88, UiMetrics.BUTTON_HEIGHT),
-                DialogResult = DialogResult.OK,
+                DialogResult = DialogResult.Cancel,
                 AutoSize = true
             };
             buttons.Controls.Add(close);
@@ -342,6 +346,7 @@ namespace RustDeskHop.UI
                 RequiresPrivateNetwork = true
             };
             _profiles.Add(profile);
+            _newProfileIds.Add(profile.Id);
             RebindProfiles(_profiles.Count - 1);
         }
 
@@ -361,18 +366,25 @@ namespace RustDeskHop.UI
                 return;
             }
 
-            if (!_computers.TrySave(out _))
-                return;
-
-            ServerProfile profile = _profiles[_selectedIndex];
+            ServerProfile profile = Clone(_profiles[_selectedIndex]);
             profile.Name = _nameBox.Text.Trim();
             profile.ServerAddress = _addressBox.Text.Trim();
             profile.PublicKey = _keyBox.Text.Trim();
             profile.RequiresPrivateNetwork = _privateNetworkBox.Checked;
             profile.ProbeHost = _probeHostBox.Text.Trim();
             profile.ProbePort = (int)_probePortBox.Value;
+            if (!_computers.TrySave(out _, targets => Persist(new AppSettings
+                {
+                    Profiles = _profiles
+                        .Where(p => p.Id == profile.Id || !_newProfileIds.Contains(p.Id))
+                        .Select(p => Clone(p.Id == profile.Id ? profile : p)).ToList(),
+                    Targets = targets
+                })))
+                return;
+
+            _newProfileIds.Remove(profile.Id);
             CaptureNetworkFields();
-            RebindProfiles(_selectedIndex);
+            RebindProfiles(_selectedIndex, () => _profiles[_selectedIndex] = profile);
         }
 
         private async Task<ConnectionOutcome?> TestComputerAsync(TargetDefinition target)
@@ -411,7 +423,8 @@ namespace RustDeskHop.UI
             if (_selectedIndex < 0 || _selectedIndex >= _profiles.Count)
                 return;
 
-            if (_profiles.Count <= 1)
+            ServerProfile selected = _profiles[_selectedIndex];
+            if (!_newProfileIds.Contains(selected.Id) && _profiles.Count(p => !_newProfileIds.Contains(p.Id)) <= 1)
             {
                 MessageBox.Show(this,
                                 "At least one network profile must remain.",
@@ -441,10 +454,21 @@ namespace RustDeskHop.UI
                 != DialogResult.Yes)
                 return;
 
-            _drafts.Remove(_profiles[_selectedIndex].Id);
-            _profiles.RemoveAt(_selectedIndex);
-            RebindProfiles(_profiles.Count > 0 ? Math.Min(_selectedIndex, _profiles.Count - 1) : -1);
+            if (!_newProfileIds.Contains(selected.Id) && !Persist(new AppSettings
+                {
+                    Profiles = _profiles.Where(p => p.Id != selected.Id && !_newProfileIds.Contains(p.Id))
+                        .Select(Clone).ToList(),
+                    Targets = Targets.Select(t => new TargetDefinition
+                        { Name = t.Name, RustDeskId = t.RustDeskId, ProfileId = t.ProfileId }).ToList()
+                }))
+                return;
+
+            _drafts.Remove(selected.Id);
+            _newProfileIds.Remove(selected.Id);
+            RebindProfiles(Math.Min(_selectedIndex, _profiles.Count - 2), () => _profiles.Remove(selected));
         }
+
+        private bool Persist(AppSettings settings) => _saveSettings?.Invoke(this, settings) ?? true;
 
         private static ServerProfile Clone(ServerProfile p) => new ServerProfile()
         {
