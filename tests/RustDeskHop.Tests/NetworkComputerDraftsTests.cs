@@ -32,6 +32,41 @@ namespace RustDeskHop.Tests
         }
 
         [Fact]
+        public void PersistenceFailureDoesNotPartiallyApplyAddsRemovalsOrRenames()
+        {
+            List<TargetDefinition> saved = [Computer("private", "111"), Computer("public", "444"),
+                                             Computer("private", "222")];
+            NetworkComputerDrafts drafts = new NetworkComputerDrafts("private", saved);
+            drafts.Items[0].Name = "  Updated computer  ";
+            drafts.Items.RemoveAt(1);
+            Assert.True(drafts.TryAdd(Computer("private", "333"), out _));
+            List<TargetDefinition>? persisted = null;
+            Assert.False(drafts.TrySave(saved, out string? error, candidate =>
+            {
+                Assert.Equal(["111", "444", "333"], candidate.Select(t => t.RustDeskId));
+                Assert.Equal("Updated computer", candidate[0].Name);
+                return false;
+            }));
+            Assert.NotNull(error);
+            Assert.Equal(["111", "444", "222"], saved.Select(t => t.RustDeskId));
+            Assert.Equal("Computer 111", saved[0].Name);
+            Assert.True(drafts.Items[1].IsNew);
+            Assert.True(drafts.TrySave(saved, out _, candidate =>
+            {
+                persisted = candidate;
+                return true;
+            }));
+            Assert.NotNull(persisted);
+            Assert.Equal(["111", "444", "333"], saved.Select(t => t.RustDeskId));
+            Assert.Equal("Updated computer", saved[0].Name);
+            Assert.False(drafts.Items[1].IsNew);
+            saved[0].Name = "Subsequent change";
+            saved[1].Name = "Unrelated network change";
+            Assert.Equal("Updated computer", persisted[0].Name);
+            Assert.Equal("Computer 444", persisted[1].Name);
+        }
+
+        [Fact]
         public void InvalidNameDoesNotPartiallyApplyAddsRemovalsOrRenames()
         {
             List<TargetDefinition> saved = [Computer("private", "111"), Computer("private", "222")];

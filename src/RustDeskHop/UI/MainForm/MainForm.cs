@@ -103,16 +103,9 @@ namespace RustDeskHop.UI
 
         private void ManageProfiles()
         {
-            using ProfilesForm dialog = new ProfilesForm(_settings.Profiles, _settings.Targets, TestComputerAsync);
-            if (dialog.ShowDialog(this) == DialogResult.OK)
-            {
-                SaveSettings(new AppSettings
-                             {
-                                 Profiles = dialog.Profiles,
-                                 Targets = dialog.Targets
-                             }
-                            );
-            }
+            using ProfilesForm dialog = new ProfilesForm(_settings.Profiles, _settings.Targets,
+                                                         TestComputerAsync, SaveSettings);
+            dialog.ShowDialog(this);
         }
 
         private Task<ConnectionOutcome> TestComputerAsync(IWin32Window owner,
@@ -128,22 +121,24 @@ namespace RustDeskHop.UI
             return _connections.ConnectAsync(target, preview, _createInteraction(owner));
         }
 
-        private void SaveSettings(AppSettings updated)
+        private bool SaveSettings(IWin32Window owner, AppSettings updated)
         {
             try
             {
                 _settingsStore.Save(updated);
                 _settings = updated;
                 RefreshTargets();
+                return true;
             }
             catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
             {
-                MessageBox.Show(this,
+                MessageBox.Show(owner,
                                 $"Your changes could not be saved. The previous settings were kept.\n\n{ex.Message}",
                                 "Settings not saved",
                                 MessageBoxButtons.OK,
                                 MessageBoxIcon.Warning
                                );
+                return false;
             }
         }
         #endregion

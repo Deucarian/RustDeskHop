@@ -57,13 +57,14 @@ namespace RustDeskHop.UI
             _probePortBox.Value = Math.Clamp(profile.ProbePort, 1, 65535);
         }
 
-        private void RebindProfiles(int index)
+        private void RebindProfiles(int index, Action? update = null)
         {
             _networkListTransition.Begin();
             _rebindingProfiles = true;
             _profileList.BeginUpdate();
             try
             {
+                update?.Invoke();
                 _profileList.DataSource = null;
                 _profileList.DisplayMember = nameof(ServerProfile.Name);
                 _profileList.DataSource = _profiles;

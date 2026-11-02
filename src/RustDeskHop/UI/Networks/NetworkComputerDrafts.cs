@@ -61,11 +61,19 @@ namespace RustDeskHop.UI
             return true;
         }
 
-        internal bool TrySave(List<TargetDefinition> targets, out string? error)
+        internal bool TrySave(List<TargetDefinition> targets, out string? error,
+                              Func<List<TargetDefinition>, bool>? persist = null)
         {
             error = Items.Select(Validate).FirstOrDefault(message => message is not null);
             if (error is not null)
                 return false;
+
+            // Persist a detached candidate before accepting edits or locking a newly entered ID.
+            if (persist is not null && !persist(SavedSnapshot(targets)))
+            {
+                error = "Changes could not be saved. Your edits are still here; try Save network again.";
+                return false;
+            }
 
             HashSet<TargetDefinition> retained = Items.Select(d => d.Target).ToHashSet();
             targets.RemoveAll(t => _original.Contains(t) && !retained.Contains(t));
@@ -82,6 +90,28 @@ namespace RustDeskHop.UI
             _original.AddRange(Items.Select(d => d.Target));
             error = null;
             return true;
+        }
+
+        private List<TargetDefinition> SavedSnapshot(List<TargetDefinition> targets)
+        {
+            Dictionary<TargetDefinition, ComputerDraft> edits = Items.ToDictionary(d => d.Target);
+            List<TargetDefinition> saved = [];
+            foreach (TargetDefinition target in targets)
+            {
+                if (_original.Contains(target) && !edits.ContainsKey(target))
+                    continue;
+                edits.TryGetValue(target, out ComputerDraft? draft);
+                saved.Add(new TargetDefinition
+                {
+                    Name = draft?.Name.Trim() ?? target.Name,
+                    RustDeskId = draft is { IsNew: true }
+                        ? ComputerAddress.Normalize(draft.RustDeskId) : target.RustDeskId,
+                    ProfileId = target.ProfileId
+                });
+            }
+            foreach (ComputerDraft draft in Items.Where(d => !targets.Contains(d.Target)))
+                saved.Add(Snapshot(draft));
+            return saved;
         }
 
         internal string? Validate(ComputerDraft draft)
