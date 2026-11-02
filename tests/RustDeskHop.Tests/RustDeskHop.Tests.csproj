@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\RustDeskCompanion.csproj" />
+    <ProjectReference Include="..\..\src\RustDeskHop\RustDeskHop.csproj" />
     <None Include="..\..\Assets\RustDeskHop.svg" Link="BrandingMaster.svg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

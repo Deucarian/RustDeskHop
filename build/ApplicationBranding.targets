@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <BrandingSource>$(RepositoryRoot)Assets\RustDeskHop.svg</BrandingSource>
+  </PropertyGroup>
+  <Target Name="GenerateApplicationBranding"
+          Inputs="$(BrandingSource);$(RepositoryRoot)tools\Build-ApplicationIcon.ps1;$(RepositoryRoot)tools\BrandingRenderer\Program.cs;$(RepositoryRoot)tools\BrandingRenderer\BrandingRenderer.csproj"
+          Outputs="$(IntermediateOutputPath)branding\RustDeskHop.ico;$(IntermediateOutputPath)branding\RustDeskHop.png">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(RepositoryRoot)tools\Build-ApplicationIcon.ps1&quot; -Source &quot;$(BrandingSource)&quot; -Destination &quot;$(IntermediateOutputPath)branding\RustDeskHop.ico&quot; -LogoDestination &quot;$(IntermediateOutputPath)branding\RustDeskHop.png&quot;" />
+  </Target>
+  <Target Name="UseApplicationBranding" BeforeTargets="AssignTargetPaths" DependsOnTargets="GenerateApplicationBranding">
+    <PropertyGroup>
+      <ApplicationIcon>$(IntermediateOutputPath)branding\RustDeskHop.ico</ApplicationIcon>
+    </PropertyGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="$(IntermediateOutputPath)branding\RustDeskHop.ico" LogicalName="RustDeskHop.Assets.RustDeskHop.ico" />
+      <EmbeddedResource Include="$(IntermediateOutputPath)branding\RustDeskHop.png" LogicalName="RustDeskHop.Assets.RustDeskHop.png" />
+      <None Include="$(IntermediateOutputPath)branding\RustDeskHop.ico"
+            Link="Assets\RustDeskHop.ico" TargetPath="Assets\RustDeskHop.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+      <None Include="$(IntermediateOutputPath)branding\RustDeskHop.png"
+            Link="Assets\RustDeskHop.png" TargetPath="Assets\RustDeskHop.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+      <FileWrites Include="$(IntermediateOutputPath)branding\RustDeskHop.ico;$(IntermediateOutputPath)branding\RustDeskHop.png" />
+    </ItemGroup>
+  </Target>
+</Project>

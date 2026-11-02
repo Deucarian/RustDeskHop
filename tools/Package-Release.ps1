@@ -4,7 +4,7 @@ param(
     [Parameter(Mandatory)][string]$PublishDirectory,
     [Parameter(Mandatory)][string]$InstallerDirectory,
     [Parameter(Mandatory)][string]$OutputDirectory,
-    [string]$SigningEnabled
+    [ValidateSet('', 'false', 'true')][string]$SigningEnabled
 )
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'Test-Publish.ps1') -PublishDirectory $PublishDirectory
@@ -18,7 +18,7 @@ Compress-Archive -Path (Join-Path $PublishDirectory 'licenses'), (Join-Path $Pub
 git archive --format=zip "--prefix=$prefix/" "--output=$(Join-Path $OutputDirectory "$prefix-source.zip")" HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Matching source archive failed' }
 Copy-Item -LiteralPath (Join-Path $PublishDirectory 'LICENSE') -Destination $OutputDirectory
-$signatureStatus = if ($SigningEnabled -eq 'true') { 'Application and setup EXE: Authenticode signed and timestamped. The installer-generated uninstaller is not separately signed.' } else { 'UNSIGNED TEST BUILD: no trusted Authenticode publisher signature. Windows may warn. Do not disable Windows security protections.' }
+$signatureStatus = if ($SigningEnabled -eq 'true') { 'Application and setup EXE: Authenticode signed and timestamped. The installer-generated uninstaller is not separately signed.' } else { 'UNSIGNED BUILD: no trusted Authenticode publisher signature. Signing is optional, not a GPL requirement. Windows may warn or block this download. Do not disable Windows security protections.' }
 $limitations = if ($Version.Contains('-')) { 'Opt-in beta: real mixed-DPI/alternate-account and cross-version end-to-end checks are not complete; branding clearance is still pending. Not a broad production-readiness claim.' } else { 'Public release gates passed; see the versioned testing evidence and branding record.' }
 $notes = @"
 $signatureStatus

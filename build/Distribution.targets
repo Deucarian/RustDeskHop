@@ -1,0 +1,17 @@
+<Project>
+  <ItemGroup>
+    <!-- Keep the existing repository-root development seed, never ship it. -->
+    <None Include="$(RepositoryRoot)settings.local.json" Link="settings.local.json"
+          Condition="Exists('$(RepositoryRoot)settings.local.json')"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <None Include="$(RepositoryRoot)LICENSE;$(RepositoryRoot)README.md"
+          Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(BrandingSource)" Link="Assets\RustDeskHop.svg"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(RepositoryRoot)THIRD-PARTY-NOTICES.md;$(RepositoryRoot)PRIVACY.md;$(RepositoryRoot)SECURITY.md;$(RepositoryRoot)CONTRIBUTING.md"
+          Link="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(RepositoryRoot)docs\**\*" Link="docs\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+</Project>

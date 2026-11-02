@@ -8,6 +8,7 @@ updates:
   - package-ecosystem: nuget
     directories:
       - /
+      - /src/RustDeskHop
       - /tests/RustDeskHop.Tests
       - /tools/BrandingRenderer
     target-branch: develop
