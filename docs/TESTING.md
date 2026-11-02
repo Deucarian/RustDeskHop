@@ -2,6 +2,18 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.7 save persistence and refresh (2026-11-02)
+
+The maintainer reported that saved networks and computers were missing or stale on the same PC. Code inspection found that Save network accepted editor drafts without writing settings; the owner saved and refreshed only after the modal returned OK. Closing with X could therefore discard apparently saved changes.
+
+- **Reproduced:** four isolated regression cases failed on the original code with zero settings writes: new/existing networks, immediately after Save and after closing with X.
+- **Passed:** Save now writes a detached candidate before accepting edits or locking a new ID, then refreshes the dashboard. Tests reload the real temporary settings file and reopen management to verify persistence. Close does not commit later unsaved edits or incomplete new networks.
+- **Passed:** failed-save/retry, detached snapshots, scoped drafts, incomplete new networks, atomic additions/removals/renames, and existing row/viewport preservation coverage. The [fix's GitHub build](https://github.com/Deucarian/RustDeskHop/actions/runs/41469606818) passed all 290 tests and 27 release-tool checks, plus self-contained publishing, installer packaging, disposable-runner install/upgrade/launch/uninstall and versioned release packaging. Local regression and full-suite evidence also passed.
+- **Implementation:** confirmed network deletion persists before removal. Uses existing controls and content transitions, with network-list mutations captured inside the transition. UX policy 1.15.0, work-tool profile; no new layout or motion primitive.
+- **Approved:** the maintainer explicitly authorized merging into develop/main, a new release and installation on this PC. Human review of the installed fix, native delete/error dialogs and laptop behavior had not been completed when these release notes were prepared. Tests use fictional data and isolated stores.
+
+The final PR and tag workflows validate the release tree and assets separately. Existing connection/session behavior and settings schema/location are retained; no account synchronization is added. Wider manual-validation/branding gates remain false, and the unsigned/beta disclosures continue to apply even when marked Latest.
+
 ## v0.1.1-beta.6 startup DPI correction (2026-11-02)
 
 The maintainer reported different apparent layout density between a laptop at 1920x1080 / 100% and a desktop at 150%. The installed desktop executable matched beta.5. Isolated production-form probes with fictional in-memory data reproduced a startup DPI defect: at 144 DPI, text/buttons grew while the dashboard and manager retained 96-DPI client dimensions of 810x270 and 810x396.
