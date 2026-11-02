@@ -9,6 +9,35 @@ namespace RustDeskHop.Tests
     {
         #region Test Methods
         [Theory]
+        [InlineData(1F)]
+        [InlineData(1.5F)]
+        [InlineData(2F)]
+        public void InitialDpiScaleReachesNetworkSettingsColumns(float startupScale)
+        {
+            OnSta(() =>
+                  {
+                      AppSettings settings = Settings(1);
+                      using ProfilesForm form = new ProfilesForm(settings.Profiles, settings.Targets);
+                      // Simulate a design/runtime DPI mismatch without changing Windows display settings.
+                      float designDpi = form.DeviceDpi / startupScale;
+                      form.AutoScaleDimensions = new SizeF(designDpi, designDpi);
+                      form.Show();
+                      Application.DoEvents();
+                      SectionTabs sections = Find<SectionTabs>(form, "NetworkSections");
+                      sections.SelectedIndex = 0;
+                      Application.DoEvents();
+                      TableLayoutPanel panes = Find<TableLayoutPanel>(form, "NetworkPanes");
+                      Label name = Descendants(sections.SelectedTab!).OfType<Label>()
+                          .Single(label => label.Text == "Profile name");
+                      TableLayoutPanel fields = Assert.IsType<TableLayoutPanel>(name.Parent);
+                      float expected = startupScale * form.ScaleState.Factor;
+                      Assert.InRange(panes.ColumnStyles[0].Width, 196 * expected - 1, 196 * expected + 1);
+                      Assert.InRange(fields.ColumnStyles[0].Width, 120 * expected - 1, 120 * expected + 1);
+                      Assert.True(fields.ClientRectangle.Contains(name.Bounds));
+                  });
+        }
+
+        [Theory]
         [InlineData(50)]
         [InlineData(75)]
         [InlineData(100)]

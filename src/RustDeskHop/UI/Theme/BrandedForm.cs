@@ -17,6 +17,8 @@ namespace RustDeskHop.UI.Theme
         #region Constructors and Destructors
         protected BrandedForm()
         {
+            // Keep the 96-DPI design baseline until derived forms have built their controls.
+            SuspendLayout();
             Icon = AppBranding.Icon;
             ShowIcon = true;
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -127,6 +129,7 @@ namespace RustDeskHop.UI.Theme
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            ResumeLayout(true);
             ApplyWindowTheme();
         }
 

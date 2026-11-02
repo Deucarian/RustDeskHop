@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1-beta.6 — 2026-11-02
+
+Fix Windows startup DPI scaling while preserving the existing interface and fixed 90% design density.
+
+- Scale windows, sidebar widths and nested network fields together with their text and buttons. At 150% Windows scaling, the dashboard and network manager now receive their full initial DPI layout instead of retaining 100% dimensions.
+- Preserve the 96-DPI design baseline until each form has constructed its controls, and let nested editors inherit the initial scaling pass.
+- Add regression coverage for nested field columns at simulated 100%, 150% and 200% startup scaling. All 282 local tests pass.
+
+Saved networks/computers, settings compatibility, connection routing and installer identity are unchanged. The maintainer approved the corrected fictional-data preview; laptop testing and the wider manual-validation matrix remain pending. This remains an unsigned beta, including when selected as GitHub's Latest release. See [testing evidence](TESTING.md).
+
 ## 0.1.1-beta.5 — 2026-11-02
 
 Maintenance release following 0.1.1-beta.4. The application source, saved-settings schema/location and installer identity remain unchanged.
