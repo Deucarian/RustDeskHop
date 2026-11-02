@@ -231,7 +231,7 @@ Use the **Bug report** template for reproducible defects. Anyone with a GitHub a
 
 ## Downloads
 
-The current public-testing version is [RustDeskHop v0.1.1-beta.4](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.4), with the redesigned interface, preserved management drafts and sidebar flicker fix. Choose the versioned installer or portable ZIP on that release page. It remains an unsigned beta; the validation and branding limitations above still apply.
+The current public-testing version is [RustDeskHop v0.1.1-beta.5](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.5), a test and build-toolchain maintenance update that retains the interface, preserved management drafts and sidebar flicker fix from beta.4. Choose the versioned installer or portable ZIP on that release page. It remains an unsigned beta; the validation and branding limitations above still apply. See the [changelog](docs/CHANGELOG.md) for the dependency changes.
 
 GitHub's stable-release link below excludes beta releases and may therefore point to an older version:
 

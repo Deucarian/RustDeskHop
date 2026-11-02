@@ -2,6 +2,18 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.5 integration validation (2026-11-02)
+
+This maintenance release updates only the test packages and pinned GitHub Actions, plus release documentation. The integrated dependency tree at `923eec32761c72cc17ce1eb825d21c1dad51964a` exactly matches the locally tested combined candidate. Application source, settings schema/location, branding master and installer identity are unchanged from beta.4. Existing multi-server routing and session handling were not re-investigated.
+
+- The local combined candidate, using SDK 10.0.401 and the three updated test packages, passed all 279 tests with no skips. Its test-name set exactly matched the unchanged baseline. The self-contained Windows x64 publish, 27 release-tool checks and executable `--verify-install` check also passed.
+- The initial local baseline run passed 278/279 tests: `NetworkFieldsShrinkAfterGrowingWithoutHidingLowerFields` failed its field-containment assertion. The same test passed when repeated without code changes. The combined candidate passed the full suite. This records an intermittent baseline result; no product fix or definitive root cause is claimed.
+- All seven dependency PRs passed a fresh required Windows build before sequential integration. The [final adapter PR check](https://github.com/Deucarian/RustDeskHop/actions/runs/41443314468) passed 279/279 tests with no skips, 27 release-tool checks, the disposable-runner installer/upgrade/uninstall and retained-data smoke test, and eight-asset release packaging without publication.
+- Reviewed conflict resolutions retain both action updates and all three intended test package versions. The older SDK/adapter PRs #28 and #30 are superseded by #45 and #46.
+- The downloaded beta.4 distribution was independently checked: all seven checksum entries matched; all eight attached files matched the verified release-workflow provenance; all 166 source-archive files matched the tagged source. Its application and installer were confirmed unsigned.
+
+The final beta.5 tag workflow separately builds and validates the published files and generates their provenance. No new live remote-connection, mixed-DPI, alternate-account, clean-consumer-install or signing validation is claimed. Both committed readiness flags remain false, and the existing unsigned/beta disclosures continue to apply.
+
 ## v0.1.1-beta.4 release scope (2026-10-06)
 
 This release collects the composition/conventions work, redesigned inline computer management, fixed 90% density, joined page tabs, direct Connect-button navigation, preserved per-network drafts and the sidebar hover-flicker fix. The maintainer confirmed the installed fix works. The latest local evidence is 279 passing .NET tests, 27 release-tool checks, the executable self-check and the native checks recorded below. The tagged workflow separately requires tests, installer smoke checks and distribution validation before publishing versioned assets and provenance.
