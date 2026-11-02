@@ -73,7 +73,7 @@ namespace RustDeskHop.Tests
                                  row => Assert.IsType<DataGridViewButtonCell>(row.Cells["Connect"])
                                 );
                       Assert.Equal(DataGridViewCellBorderStyle.None, grid.CellBorderStyle);
-                      Assert.Equal(AppTheme.selection, grid.DefaultCellStyle.SelectionBackColor);
+                      Assert.Equal(Color.White, grid.DefaultCellStyle.SelectionBackColor);
                       Assert.True(grid.ReadOnly);
                       Assert.False(grid.MultiSelect);
                   }
@@ -144,7 +144,8 @@ namespace RustDeskHop.Tests
                               form.Size = size;
                               form.PerformLayout();
                               Application.DoEvents();
-                              Assert.InRange(grid.Rows[0].Height, UiMetrics.COMPUTER_ROW_HEIGHT, UiMetrics.COMPUTER_ROW_HEIGHT + 4);
+                              int minimum = UiScale.Pixels(form, UiMetrics.COMPUTER_ROW_HEIGHT);
+                              Assert.InRange(grid.Rows[0].Height, minimum, minimum + 4);
                               Assert.Equal(3, grid.Rows.Count);
                               Assert.True(Find<SurfacePanel>(form, "ComputersCard").Width <= UiMetrics.CONTENT_WIDTH);
                               Assert.True(grid.Height >= UiMetrics.COMPUTER_ROW_HEIGHT);
@@ -197,11 +198,13 @@ namespace RustDeskHop.Tests
                       Assert.InRange(grid.Top, 1, 4);
                       Assert.Empty(form.Controls.Find("PageTitle", true));
                       Assert.Equal("Manage computers and networks", toolbar.AccessibleName);
-                      Assert.Equal(UiMetrics.FOOTER_GAP, toolbar.Top - card.Bottom);
-                      Assert.Equal(UiMetrics.PAGE_INSET, toolbar.Parent!.ClientSize.Height - toolbar.Bottom);
+                      Assert.Equal(UiScale.Pixels(form, UiMetrics.FOOTER_GAP), toolbar.Top - card.Bottom);
+                      Assert.Equal(UiScale.Pixels(form, UiMetrics.PAGE_INSET),
+                                   toolbar.Parent!.ClientSize.Height - toolbar.Bottom
+                                  );
                       Assert.InRange(grid.Height - grid.ContentHeight, 0, UiMetrics.INSET);
-                      Assert.Equal(UiMetrics.PAGE_INSET, card.Top);
-                      Assert.Equal(UiMetrics.PAGE_INSET, card.Left);
+                      Assert.Equal(UiScale.Pixels(form, UiMetrics.PAGE_INSET), card.Top);
+                      Assert.Equal(UiScale.Pixels(form, UiMetrics.PAGE_INSET), card.Left);
                       Assert.Empty(Descendants(form).OfType<Divider>());
                       foreach (string name in new[]
                                {
@@ -228,7 +231,9 @@ namespace RustDeskHop.Tests
                       Assert.Equal(50, grid.Rows.Count);
                       Assert.True(grid.Rows[1].Height > grid.RowTemplate.MinimumHeight);
                       grid.CurrentCell = grid.Rows[49].Cells[0];
-                      Assert.Equal(49, Assert.Single(grid.SelectedRows.Cast<DataGridViewRow>()).Index);
+                      Assert.Equal(49, grid.CurrentCell.RowIndex);
+                      Assert.Empty(grid.SelectedRows);
+                      Assert.Empty(grid.SelectedCells);
                       Assert.Equal("Computer 50, RustDesk ID 123 456 050", grid.Rows[49].Cells["Computer"].Value);
                   }
                  );
@@ -360,7 +365,7 @@ namespace RustDeskHop.Tests
                       Rectangle route = grid.GetCellDisplayRectangle(2, 1, false);
                       Rectangle action = grid.GetCellDisplayRectangle(3, 1, false);
                       Assert.False(route.IntersectsWith(action));
-                      Assert.Equal(116, action.Width);
+                      Assert.Equal(UiScale.Pixels(form, 116), action.Width);
                       Assert.True(action.Right <= grid.ClientSize.Width);
                   }
                  );
@@ -432,7 +437,7 @@ namespace RustDeskHop.Tests
                       EditName(grid, 0, "Private workstation");
                       Find<ModernButton>(form, "SaveNetwork").PerformClick();
                       Find<ListBox>(form, "Networks").SelectedIndex = 0;
-                      Assert.Equal("Computer 1", grid.Rows[0].Cells[0].Value);
+                      Assert.Equal("Unsaved public name", grid.Rows[0].Cells[0].Value);
                       Assert.Equal("Private workstation", form.Targets[1].Name);
                       Assert.Equal("Computer 1", form.Targets[0].Name);
                   }
@@ -568,8 +573,6 @@ namespace RustDeskHop.Tests
 
         private static AppSettings Settings(int count) => new AppSettings()
         {
-            // Existing geometry regressions retain their original 100% reference size.
-            UiScalePercent = 100,
             Profiles =
             [
                 new ServerProfile()

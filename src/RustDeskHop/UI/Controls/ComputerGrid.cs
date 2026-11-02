@@ -8,18 +8,23 @@ namespace RustDeskHop.UI.Controls
         public string AccessibleIdentity => $"{Name}, RustDesk ID {ComputerIdentityPainter.DisplayId(RustDeskId)}";
     }
 
-    internal sealed class ComputerGrid : DataGridView, IUiScaleAware
+    internal sealed partial class ComputerGrid : DataGridView, IUiScaleAware
     {
         #region Constants and Fields
         private bool _sizingRows;
         private bool _sizingScheduled;
         private int _lastContentHeight;
         private int? _openingRow;
+        private readonly GridInteractionMotion _motion;
         #endregion
 
         #region Constructors and Destructors
         public ComputerGrid()
         {
+            _motion = new GridInteractionMotion(this,
+                                                (_, column) => Columns[column].Name == "Connect",
+                                                () => _keyboardNavigation
+                                               );
             DoubleBuffered = true;
             BorderStyle = BorderStyle.None;
             BackgroundColor = Color.White;
@@ -37,7 +42,7 @@ namespace RustDeskHop.UI.Controls
             RowHeadersVisible = false;
             ColumnHeadersVisible = false;
             AutoGenerateColumns = false;
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            SelectionMode = DataGridViewSelectionMode.CellSelect;
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
             ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
@@ -48,7 +53,7 @@ namespace RustDeskHop.UI.Controls
             {
                 BackColor = Color.White,
                 ForeColor = AppTheme.ink,
-                SelectionBackColor = AppTheme.selection,
+                SelectionBackColor = Color.White,
                 SelectionForeColor = AppTheme.ink,
                 WrapMode = DataGridViewTriState.True,
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
@@ -123,6 +128,13 @@ namespace RustDeskHop.UI.Controls
         #endregion
 
         #region Methods
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _motion.Dispose();
+            base.Dispose(disposing);
+        }
+
         internal void SetOpeningRow(int? index)
         {
             _openingRow = index;
@@ -141,26 +153,6 @@ namespace RustDeskHop.UI.Controls
             base.OnCellContentClick(e);
             if (Enabled && e.RowIndex >= 0 && e.ColumnIndex == Columns["Connect"]!.Index)
                 ConnectRequested?.Invoke(this, e);
-        }
-
-        protected override void OnCellDoubleClick(DataGridViewCellEventArgs e)
-        {
-            base.OnCellDoubleClick(e);
-            if (Enabled && e.RowIndex >= 0 && e.ColumnIndex != Columns["Connect"]!.Index)
-                ConnectRequested?.Invoke(this, e);
-        }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (Enabled && e.KeyCode == Keys.Enter && CurrentCell is not null)
-            {
-                e.SuppressKeyPress = true;
-                ConnectRequested?.Invoke(this,
-                                         new DataGridViewCellEventArgs(CurrentCell.ColumnIndex, CurrentCell.RowIndex)
-                                        );
-                return;
-            }
-            base.OnKeyDown(e);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -217,7 +209,7 @@ namespace RustDeskHop.UI.Controls
                                             ),
                                CombineMode.Intersect
                               );
-            using (SolidBrush background = new SolidBrush(Rows[e.RowIndex].Selected ? AppTheme.selection : Color.White))
+            using (SolidBrush background = new SolidBrush(_motion.RowColor(e.RowIndex)))
                 e.Graphics.FillRectangle(background, e.RowBounds);
             for (int column = 0; column < Columns.Count; column++)
             {
@@ -243,18 +235,6 @@ namespace RustDeskHop.UI.Controls
                                                e.RowBounds.Height - 1
                                               );
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            if (Rows[e.RowIndex].Selected)
-            {
-                if (Focused && ShowFocusCues)
-                {
-                    ControlPaint.DrawFocusRectangle(e.Graphics,
-                                                    Rectangle.Round(RectangleF.Inflate(bounds, -4, -4)),
-                                                    AppTheme.muted,
-                                                    AppTheme.selection
-                                                   );
-                }
-            }
-
             using Pen separator = new Pen(AppTheme.line);
             e.Graphics.DrawLine(separator, bounds.Left, bounds.Bottom, bounds.Right, bounds.Bottom);
 
@@ -334,8 +314,7 @@ namespace RustDeskHop.UI.Controls
         {
             float scale = UiScale.Factor(this);
             int Px(float value) => (int)Math.Round(value * scale);
-            bool selected = rowIndex >= 0 && Rows[rowIndex].Selected;
-            using SolidBrush background = new SolidBrush(selected ? AppTheme.selection : Color.White);
+            using SolidBrush background = new SolidBrush(_motion.RowColor(rowIndex));
             graphics.FillRectangle(background, bounds);
             if (rowIndex < 0)
             {
@@ -383,8 +362,9 @@ namespace RustDeskHop.UI.Controls
                     graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     using GraphicsPath shape = AppTheme.Round(button, Px(7));
                     bool opening = _openingRow == rowIndex;
-                    using SolidBrush brush = new SolidBrush(Enabled ? AppTheme.blue : AppTheme.badge);
-                    using Pen outline = new Pen(Enabled ? AppTheme.blue : AppTheme.line);
+                    Color fill = UiMotion.ButtonFill(true, Enabled, _motion.Cell(rowIndex, columnIndex));
+                    using SolidBrush brush = new SolidBrush(fill);
+                    using Pen outline = new Pen(Enabled ? fill : AppTheme.line);
                     graphics.FillPath(brush, shape);
                     graphics.DrawPath(outline, shape);
                     TextRenderer.DrawText(graphics,
@@ -397,9 +377,8 @@ namespace RustDeskHop.UI.Controls
                                           | TextFormatFlags.NoPadding
                                          );
                     if (Focused
-                        && ShowFocusCues
-                        && CurrentCell?.RowIndex == rowIndex
-                        && CurrentCell.ColumnIndex == columnIndex)
+                        && _keyboardNavigation
+                        && CurrentCell?.RowIndex == rowIndex)
                         ControlPaint.DrawFocusRectangle(graphics,
                                                         Rectangle.Inflate(button, -Px(4), -Px(4)),
                                                         Color.White,
