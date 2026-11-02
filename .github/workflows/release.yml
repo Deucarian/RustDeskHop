@@ -27,7 +27,7 @@ jobs:
           git merge-base --is-ancestor HEAD "origin/$branch"
           if ($LASTEXITCODE -ne 0) { throw "Release commit must already be merged into $branch" }
           "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
-      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
       - name: Test
