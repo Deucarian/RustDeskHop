@@ -59,8 +59,12 @@ namespace RustDeskHop.UI
             }
         }
 
-        private void RebuildRows()
+        private void RebuildRows(bool animate = true)
         {
+            if (animate)
+                _listTransition.Begin();
+            else
+                _listTransition.Cancel();
             _rebuilding = true;
             try
             {
@@ -92,6 +96,8 @@ namespace RustDeskHop.UI
                 _rebuilding = false;
             }
             ContentHeightChanged?.Invoke(this, EventArgs.Empty);
+            if (animate)
+                _listTransition.End(true);
         }
 
         private void CommitCell(int rowIndex)

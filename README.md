@@ -54,9 +54,9 @@ Public outgoing connections require RustDesk's default network to be public. Rus
 For normal day-to-day use:
 
 1. Open **RustDeskHop**.
-2. Select the computer you want to reach.
+2. Find the computer you want to reach.
 3. Check that the displayed network is the one you expect.
-4. Click **Connect** (or press Enter while the computer list is focused).
+4. Click its **Connect** button, or use Tab to focus it and press Enter or Space.
 5. Approve the route confirmation if one appears.
 
 That is the complete switching workflow. RustDeskHop routes the new connection through the network assigned to that computer. You do not need to edit RustDesk's server settings, restart RustDesk, or manually switch between public and private servers. Existing sessions on other networks stay open.
@@ -77,19 +77,21 @@ After those one-time steps, click **Connect** beside the computer you want to op
 
 ![RustDeskHop dashboard with fictional sample computers](docs/images/dashboard.png)
 
-*Production controls rendered with fictional data at 100% scaling; this preview is not evidence of a live connection.*
+*Production controls rendered with fictional data at the fixed 90% interface density and 100% Windows display scaling; this preview is not evidence of a live connection.*
 
-The main screen is a flat computer list with no title or column headings: each name sits above its muted RustDesk ID, with the saved network and solid-blue **Connect** button on the same row. Thin dividers separate computers. **Manage computers & networks** is an outlined blue-text button at the bottom right, with a small settings symbol inside it. There is no separate selection panel or routine status footer. Arrow keys move through the list; Enter connects the current row, and Space activates a focused Connect button. Longer names wrap and longer lists scroll.
+The main screen is a flat computer list with no title or column headings: each name sits above its muted RustDesk ID, with the saved network and solid-blue **Connect** button on the same row. Thin dividers separate computers. **Manage computers & networks** is an outlined blue-text button at the bottom right, with a small settings symbol inside it. Rows do not stay selected, and clicking or double-clicking a computer name does not connect. Use its **Connect** button. Tab/Shift+Tab move between Connect buttons and the management action; arrow keys navigate the list, and Enter or Space activates the focused connection. Hover feedback is temporary and keyboard focus stays visible on the button. Longer names wrap and longer lists scroll.
 
 ![Computer management with fictional sample data](docs/images/management.png)
 
-Management has a quiet network sidebar and **Computers / Network settings** selector. Saved computers use the same grouped name-and-ID layout; new computers get inline name and ID fields. Test and Remove stay beside their own computer, with **+ Add computer** as the final row. The window fits short lists automatically until you resize it yourself; longer lists scroll. Both previews use production controls and fictional data, not live remote sessions.
+Management has a quiet network sidebar and **Computers / Network settings** page tabs in one continuous, full-width strip. A shared frame with rounded outer corners joins both tabs; a blue underline identifies the active page. The blue text and hover feedback use the Test action's palette. Their tab roles, visible keyboard focus, arrow-key navigation and Ctrl+Tab shortcuts remain available. Saved computers use the same grouped name-and-ID layout; new computers get inline name and ID fields. Test and Remove stay beside their own computer, with **+ Add computer** as the final row. Each window keeps a fixed size; longer lists scroll inside it. Both previews use production controls and fictional data, not live remote sessions.
 
-Use the **UI size** slider at the bottom of any companion window to adjust the interface from **50% to 150%**. The default is **75%**; **100%** restores the original design size shown above. Text, spacing, rows and buttons scale together, while the slider and native Windows title bar retain their normal size. Changes apply to all open companion windows and are remembered when you release the slider or finish a keyboard adjustment. This does not change Windows display scaling or RustDesk. Unsaved computer/network edits remain drafts until **Save network**.
+The interface uses the former slider's **90%** size as its fixed design density. The experimental slider is removed, and old saved slider values are ignored without rewriting settings at startup. Windows display scaling still applies independently. Windows cannot be manually resized or maximized; their matching minimum/maximum sizes keep the layout consistent. Unsaved computer/network edits remain drafts until **Save network**.
+
+Buttons, computer rows, network items and editable fields have short hover/focus feedback. Computer and network lists animate changes by item identity, and management pages use a brief fade/slide transition. Keyboard or scroll input ends a content transition immediately; clicks on moving rows dismiss the transition without activating a different row. Motion is disabled when Windows client-area animations are disabled or high contrast is active. Timers stop when idle and animation resources are disposed with their controls.
 
 **Opening…** appears on the clicked row only while the companion prepares and launches RustDesk. It does not claim that the remote session has connected; authentication and session status belong to RustDesk. RustDesk's default can still change outside the companion, so route checks and relevant safety/consent dialogs remain active.
 
-The rabbit icon stays in the title bar and taskbar, without a second oversized logo in the content. All windows use real Windows caption controls (minimize, maximize/restore, close), native resizing, snapping and the system menu—not text-symbol imitations. On Windows 11, the title bar blends into the app's light canvas using [Windows' supported caption-colour attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute); older Windows versions retain standard system chrome, and high-contrast mode retains system caption colours. The dashboard, management window and sign-in view use the same outer spacing, with shared inner spacing for fields and actions. Adding a computer happens inline rather than in a separate dialog. These presentation changes do not change RustDesk routing or close existing sessions.
+The rabbit icon stays in the title bar and taskbar, without a second oversized logo in the content. Windows retains ownership of the title bar, permitted caption actions and system menu; resize/maximize actions are disabled. On Windows 11, the title bar blends into the app's light canvas using [Windows' supported caption-colour attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute); older Windows versions retain standard system chrome, and high-contrast mode retains system caption colours. The dashboard, management window and sign-in view use the same outer spacing, with shared inner spacing for fields and actions. Adding a computer happens inline rather than in a separate dialog. These presentation changes do not change RustDesk routing or close existing sessions.
 
 ### What adding and testing actually do
 
@@ -117,7 +119,7 @@ For reliable unattended incoming access, keep the RustDesk background service in
 - **Private server is unreachable:** confirm the required VPN or Tailscale connection is active and the server is online.
 - **Password prompt appears:** enter the remote computer's password and choose RustDesk's remember option if desired.
 - **Add, rename or remove a saved computer:** open **Manage computers & networks**, select its network, and open **Computers**. Choose the **+ Add computer** row to insert a computer, enter its name and RustDesk ID, edit an existing name, or choose **Remove** on the relevant row. A new row's ID is editable; saved IDs stay read-only. Choose **Save network**, then **Close**. Add automatically uses the selected network; you do not choose it again. Pasted numeric IDs with spaces are normalized. Missing names/IDs, connection links and new duplicate IDs are rejected inline. Removing an entry does not uninstall RustDesk or disconnect a session.
-- **Unsaved edits:** adding, renaming and removing are drafts until **Save network**. Switching networks or closing discards unsaved drafts. Renaming changes only the RustDeskHop label, not the ID, route, remote hostname or saved authentication.
+- **Unsaved edits:** adding, renaming, removing and network-field changes remain drafts until **Save network**. Switching tabs or networks keeps each network's draft while management stays open; clicking the already-selected network does not reload it. Saving applies only to the selected network, without resetting its computer list or saving other networks' drafts. Closing management still discards anything not saved, so choose **Save network** for each edited network before closing. Renaming changes only the RustDeskHop label, not the ID, route, remote hostname or saved authentication.
 - **Wrong network is shown:** add the computer under its correct network, save, then remove the old entry from the previous network and save again. An ID can exist in different networks, but Add rejects duplicates within one network. Remove and save a network's computers before deleting that network.
 
 ## Configuration
@@ -229,7 +231,9 @@ Use the **Bug report** template for reproducible defects. Anyone with a GitHub a
 
 ## Downloads
 
-The latest public release is always available from the stable link below:
+The current public-testing version is [RustDeskHop v0.1.1-beta.4](https://github.com/Deucarian/RustDeskHop/releases/tag/v0.1.1-beta.4), with the redesigned interface, preserved management drafts and sidebar flicker fix. Choose the versioned installer or portable ZIP on that release page. It remains an unsigned beta; the validation and branding limitations above still apply.
+
+GitHub's stable-release link below excludes beta releases and may therefore point to an older version:
 
 <https://github.com/Deucarian/RustDeskHop/releases/latest>
 
