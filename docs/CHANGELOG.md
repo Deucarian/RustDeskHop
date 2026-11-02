@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.1-beta.7 — 2026-11-02
+
+Fix saving networks and computers so **Save network** writes changes immediately and refreshes the main computer list.
+
+- Keep saved changes after closing management with either Close or the window's X. Closing no longer performs a second, implicit save.
+- Preserve editable drafts when a save fails, including the ability to correct a new computer's ID before retrying.
+- Save only the selected network; keep other networks' unfinished edits and incomplete new networks out of the saved file.
+- Persist confirmed network deletions before removing them from management. Keep the existing computer-row objects, focus and scrolling when saving.
+
+All 290 tests and 27 release-tool checks passed in the fix's GitHub build, including installer/upgrade/launch/uninstall and release packaging checks. Settings format/location and connection behavior are retained. Account or cross-device synchronization is not included. This remains an unsigned beta, including when selected as GitHub's Latest release. See [testing evidence](TESTING.md).
+
 ## 0.1.1-beta.6 — 2026-11-02
 
 Fix Windows startup DPI scaling while preserving the existing interface and fixed 90% design density.
