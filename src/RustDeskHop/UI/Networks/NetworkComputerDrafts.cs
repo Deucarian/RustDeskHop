@@ -76,6 +76,7 @@ namespace RustDeskHop.UI
                     draft.Target.RustDeskId = ComputerAddress.Normalize(draft.RustDeskId);
                 if (!targets.Contains(draft.Target))
                     targets.Add(draft.Target);
+                draft.AcceptSaved();
             }
             _original.Clear();
             _original.AddRange(Items.Select(d => d.Target));
@@ -115,8 +116,17 @@ namespace RustDeskHop.UI
         #region Properties and Indexers
         internal TargetDefinition Target { get; } = target;
         public string Name { get; set; } = target.Name;
-        internal bool IsNew { get; } = isNew;
+        internal bool IsNew { get; private set; } = isNew;
         public string RustDeskId { get; set; } = target.RustDeskId;
+        #endregion
+
+        #region Methods
+        internal void AcceptSaved()
+        {
+            Name = Target.Name;
+            RustDeskId = Target.RustDeskId;
+            IsNew = false;
+        }
         #endregion
     }
 }

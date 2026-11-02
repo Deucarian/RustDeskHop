@@ -120,6 +120,8 @@ namespace RustDeskHop.Tests
                       DataGridView grid = Find<DataGridView>(form, "NetworkComputers");
                       EditCell(grid, 0, 0, "Draft");
                       EditCell(grid, 0, 1, "123 456 999");
+                      Find<ListBox>(form, "Networks").SelectedIndex = 0;
+                      Find<ListBox>(form, "Networks").SelectedIndex = 1;
                       ClickComputerAction(form, 0, "TestComputer");
                       Assert.True(tested is not null,
                                   $"Feedback: {Find<Label>(form, "ComputerFeedback").Text}; "
@@ -165,7 +167,7 @@ namespace RustDeskHop.Tests
                       ClickAddRow(form);
                       Find<ListBox>(form, "Networks").SelectedIndex = 1;
                       Find<ListBox>(form, "Networks").SelectedIndex = 0;
-                      Assert.Equal(2, Find<DataGridView>(form, "NetworkComputers").Rows.Count);
+                      Assert.Equal(3, Find<DataGridView>(form, "NetworkComputers").Rows.Count);
                       Assert.Single(settings.Targets);
                   }
                  );

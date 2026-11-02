@@ -1,25 +1,23 @@
-using RustDeskHop.Models;
-
 namespace RustDeskHop.UI.Theme
 {
-    // One application-owned preference, shared by its windows. Never changes OS DPI or remote desktops.
+    // Shared typography cache. The production density is fixed; Windows DPI remains independent.
     internal sealed class UiScaleState : IDisposable
     {
         #region Constants and Fields
+        internal const int DEFAULT_PERCENT = 90;
         private readonly Dictionary<(Font Font, int Percent), Font> _fonts = [];
         private int _percent;
         #endregion
 
         #region Constructors and Destructors
-        internal UiScaleState(int percent = UiScalePreference.DEFAULT)
+        internal UiScaleState(int percent = DEFAULT_PERCENT)
         {
-            _percent = UiScalePreference.Normalize(percent);
+            _percent = Math.Clamp(percent, 50, 150);
         }
         #endregion
 
         #region Delegates and Events
         internal event EventHandler? Changed;
-        internal event EventHandler? Committed;
         #endregion
 
         #region Properties and Indexers
@@ -30,15 +28,13 @@ namespace RustDeskHop.UI.Theme
         #region Methods
         internal void SetPercent(int percent)
         {
-            int normalized = UiScalePreference.Normalize(percent);
+            int normalized = Math.Clamp(percent, 50, 150);
             if (_percent == normalized)
                 return;
 
             _percent = normalized;
             Changed?.Invoke(this, EventArgs.Empty);
         }
-
-        internal void Commit() => Committed?.Invoke(this, EventArgs.Empty);
 
         internal Font FontFor(Font original)
         {
