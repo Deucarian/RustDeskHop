@@ -19,7 +19,7 @@ namespace RustDeskHop.UI.Controls
         {
             _transition = new ContentTransition(_pageHost);
             BackColor = Color.White;
-            AutoScaleMode = AutoScaleMode.None;
+            AutoScaleMode = AutoScaleMode.Inherit;
             Controls.Add(_track);
             Controls.Add(_pageHost);
             AccessibleRole = AccessibleRole.PageTabList;

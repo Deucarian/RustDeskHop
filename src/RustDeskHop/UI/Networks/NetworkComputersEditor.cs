@@ -25,7 +25,7 @@ namespace RustDeskHop.UI
         internal NetworkComputersEditor(Func<TargetDefinition, Task<ConnectionOutcome?>>? testConnection = null)
         {
             _testConnection = testConnection;
-            AutoScaleMode = AutoScaleMode.None;
+            AutoScaleMode = AutoScaleMode.Inherit;
             BuildUi();
             _listTransition = new ContentTransition(_grid);
         }

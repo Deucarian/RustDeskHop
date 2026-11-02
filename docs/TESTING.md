@@ -2,6 +2,18 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.6 startup DPI correction (2026-11-02)
+
+The maintainer reported different apparent layout density between a laptop at 1920x1080 / 100% and a desktop at 150%. The installed desktop executable matched beta.5. Isolated production-form probes with fictional in-memory data reproduced a startup DPI defect: at 144 DPI, text/buttons grew while the dashboard and manager retained 96-DPI client dimensions of 810x270 and 810x396.
+
+- **Passed:** after deferring the initial layout until controls are constructed, 144-DPI client sizes are 1215x405 and 1215x594. At an effective 96 DPI, the existing 810x270 and 810x396 dimensions remain. The 96-DPI probe used a separate DPI-unaware process; it is not a physical laptop test. No Windows display settings were changed.
+- **Passed:** nested editors inherit initial scaling. The manager sidebar is 265 pixels wide at 144 DPI, and network-field label columns are 162 pixels wide; Profile name and Server address fit on one line in the rendered fictional-data preview.
+- **Passed:** all 282 local .NET tests, with no failures or skips. The three new cases simulate startup scaling at 100%, 150% and 200%. Reverting the two nested controls to AutoScaleMode.None makes the 150% and 200% cases fail; restoring inheritance makes them pass. These cases do not claim real 200% or mixed-monitor coverage.
+- **Approved:** the maintainer reviewed the corrected static preview and explicitly approved integration into develop/main and publication of beta.6. A subsequent live computer-use inspection was stopped by the user; no completed final native interaction pass is claimed. Static renders do not establish motion or keyboard behavior.
+- **Unchanged scope:** connection/session code, settings schema/location, branding, installer identity and motion primitives. Initial native Windows scaling happens before the first visible layout; no new animated transition is introduced. Existing multi-server selection and session handling were not re-investigated.
+
+Required GitHub builds separately check the final committed tree, distribution tooling and disposable-runner installer lifecycle. The tag workflow rebuilds the release and attests its assets. Real laptop, mixed-monitor, alternate-account and clean-consumer installation checks remain pending. Readiness flags stay false; the existing unsigned/beta disclosures apply even when this version is marked Latest on GitHub.
+
 ## v0.1.1-beta.5 integration validation (2026-11-02)
 
 This maintenance release updates only the test packages and pinned GitHub Actions, plus release documentation. The integrated dependency tree at `923eec32761c72cc17ce1eb825d21c1dad51964a` exactly matches the locally tested combined candidate. Application source, settings schema/location, branding master and installer identity are unchanged from beta.4. Existing multi-server routing and session handling were not re-investigated.
