@@ -9,6 +9,7 @@ Automated checks are evidence for specific behaviors, not a substitute for a hum
 - Window size and maximized state persist in a separate local `window.json`, using DPI-independent client dimensions. Saves are debounced during resizing and flushed when closing. Minimizing or entering fullscreen preserves the normal-size preference. Existing computer/network settings are not rewritten for window changes.
 - Regression tests cover a fresh application instance, normal/maximized state, first launch, missing/corrupt/invalid preferences, oversized preferences, fullscreen/minimized shutdown, and debounced saves without exiting.
 - Pointer focus is established before grid hit testing and the viewport is restored before processing a click. Regression cases cover unfocused scrolled dashboard/computer grids and network lists, while retaining keyboard navigation.
+- Local SDK 10.0.401 verification passed all 305 .NET tests without failures or skips. The fictional-data dashboard preview was rendered and visually checked at the default size, including the new fullscreen button.
 - Existing manual mixed-DPI, alternate-account, authenticated connection and branding limitations remain. Automated checks do not constitute a physical reboot or mixed-monitor validation.
 
 ## v0.1.1-beta.7 save persistence and refresh (2026-11-02)
