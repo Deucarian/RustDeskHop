@@ -124,9 +124,9 @@ namespace RustDeskHop.UI
             if (_restoring)
                 return;
 
-            if (_window.WindowState == FormWindowState.Minimized)
-                HideWindow();
-            else
+            // Minimize normally so Windows keeps the running window in the taskbar.
+            // Only the user's Close action hides it to the notification area.
+            if (_window.WindowState != FormWindowState.Minimized)
                 _restoreState = _window.WindowState;
         }
 
