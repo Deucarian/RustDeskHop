@@ -23,10 +23,6 @@ namespace RustDeskHop.UI
             Accent = true,
             TabIndex = 1
         };
-        private readonly ModernButton _fullscreenButton = new ModernButton
-        {
-            Name = "Fullscreen", Text = "Fullscreen (F11)", TabIndex = 2
-        };
         private readonly Label _emptyState =
             AppTheme.Label("No computers yet\nAdd one in Manage computers & networks.", color: AppTheme.muted);
         #endregion
@@ -42,7 +38,7 @@ namespace RustDeskHop.UI
             _emptyState.TextAlign = ContentAlignment.MiddleCenter;
             _emptyState.Visible = false;
             card.Controls.AddRange([_targetsGrid, _emptyState]);
-            WindowContent.Controls.AddRange([card, _profilesButton, _fullscreenButton]);
+            WindowContent.Controls.AddRange([card, _profilesButton]);
             bool layingOut = false;
             WindowContent.Layout += (_, _) =>
             {
@@ -65,8 +61,6 @@ namespace RustDeskHop.UI
                                               manageSize.Width,
                                               manageSize.Height
                                              );
-                    Size fullscreenSize = _fullscreenButton.GetPreferredSize(Size.Empty);
-                    _fullscreenButton.SetBounds(left, footerTop, fullscreenSize.Width, manageSize.Height);
                     int cardTop = margin;
                     int edge = Px(4);
                     int gridHeight = Math.Max(1, footerTop - Px(UiMetrics.FOOTER_GAP) - cardTop - 2 * edge);
@@ -81,7 +75,6 @@ namespace RustDeskHop.UI
             };
             _targetsGrid.ContentHeightChanged += (_, _) => WindowContent.PerformLayout();
             _targetsGrid.ConnectRequested += async (_, e) => await ConnectRowAsync(e.RowIndex);
-            _fullscreenButton.Click += (_, _) => ToggleFullscreen();
             _profilesButton.Click += (_, _) => ManageProfiles();
         }
         #endregion

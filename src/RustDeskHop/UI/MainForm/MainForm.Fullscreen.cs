@@ -43,7 +43,6 @@ namespace RustDeskHop.UI
                 _windowMinimum = MinimumSize;
                 Rectangle screenBounds = Screen.FromControl(this).Bounds;
                 _fullscreen = true;
-                _fullscreenButton.Text = "Exit fullscreen (Esc)";
                 WindowState = FormWindowState.Normal;
                 MinimumSize = Size.Empty;
                 FormBorderStyle = FormBorderStyle.None;
@@ -52,7 +51,6 @@ namespace RustDeskHop.UI
             else
             {
                 _fullscreen = false;
-                _fullscreenButton.Text = "Fullscreen (F11)";
                 FormBorderStyle = FormBorderStyle.Sizable;
                 MinimumSize = _windowMinimum;
                 Bounds = _windowBounds;
