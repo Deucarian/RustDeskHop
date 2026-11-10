@@ -74,7 +74,7 @@ namespace RustDeskHop.Tests
                     first.Show();
                     first.ClientSize = chosen;
                     if (fullscreen)
-                        Find<ModernButton>(first, "Fullscreen").PerformClick();
+                        PressWindowKey(first, Keys.F11);
                     else
                         first.WindowState = FormWindowState.Minimized;
                     Application.DoEvents();

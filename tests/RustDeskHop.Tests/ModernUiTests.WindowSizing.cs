@@ -24,7 +24,7 @@ namespace RustDeskHop.Tests
                 Assert.True(grid.Height > smallGrid.Height);
                 Assert.True(grid.DisplayedRowCount(false) > 3);
                 Rectangle bounds = form.Bounds;
-                Find<ModernButton>(form, "Fullscreen").PerformClick();
+                PressWindowKey(form, Keys.F11);
                 Application.DoEvents();
                 Assert.Equal(FormBorderStyle.None, form.FormBorderStyle);
                 Assert.Equal(Screen.FromControl(form).Bounds, form.Bounds);
@@ -47,11 +47,10 @@ namespace RustDeskHop.Tests
                 form.Show();
                 form.WindowState = FormWindowState.Maximized;
                 Application.DoEvents();
-                ModernButton fullscreen = Find<ModernButton>(form, "Fullscreen");
-                fullscreen.PerformClick();
+                PressWindowKey(form, Keys.F11);
                 Application.DoEvents();
                 Assert.Equal(Screen.FromControl(form).Bounds, form.Bounds);
-                fullscreen.PerformClick();
+                PressWindowKey(form, Keys.F11);
                 Application.DoEvents();
                 Assert.Equal(FormWindowState.Maximized, form.WindowState);
             });
@@ -127,6 +126,15 @@ namespace RustDeskHop.Tests
                 Assert.Equal(first, grid.FirstDisplayedScrollingRowIndex);
                 Assert.Equal(first + 1, grid.CurrentCell!.RowIndex);
             });
+        }
+        #endregion
+
+        #region Methods
+        private static void PressWindowKey(MainForm form, Keys key)
+        {
+            Message message = new Message();
+            typeof(MainForm).GetMethod("ProcessCmdKey", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(form, new object[] { message, key });
         }
         #endregion
     }
