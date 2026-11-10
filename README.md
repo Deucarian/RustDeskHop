@@ -16,6 +16,8 @@ RustDeskHop is an independent, community-driven companion for RustDesk, maintain
 4. Open **Manage computers & networks**, select a network (RustDesk Public is included by default), then choose the **+ Add computer** row in **Computers**. Type its name and RustDesk ID directly in the new row. Optionally choose **Test** on that row before saving. Choose **Save network**, then **Close**.
 5. Click **Connect** beside that computer on the main screen. Private networks also need a working VPN or other route to their server.
 
+Resize or maximize the main window to show more computers. RustDeskHop remembers the last normal window size and maximized state across restarts and reboots. The existing compact size is used on first launch or when saved window preferences are unavailable or invalid; restored sizes fit the current screen. Click **Fullscreen** or press **F11** to enter fullscreen, and press **Escape** or F11 to return. Fullscreen and minimization do not replace your saved normal size. Window preferences are stored separately in `window.json` beside the existing computer/network settings.
+
 Exit RustDeskHop from its tray menu before upgrading; leave RustDesk running. Uninstall via Windows **Installed apps**. Settings and backups are retained. For a portable ZIP, exit the companion, remove only the extracted app folder and any shortcuts you created; retained settings are described below. Never remove RustDesk's own folders as part of companion uninstall.
 
 RustDesk is excellent at connecting to devices, but it becomes awkward when one operator regularly uses more than one RustDesk network—for example, RustDesk's public network and a private self-hosted server.

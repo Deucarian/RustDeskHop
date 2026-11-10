@@ -76,14 +76,14 @@ namespace RustDeskHop.Tests
         }
 
         [Fact]
-        public void EveryCompanionWindowHasAnExactNonResizableSize()
+        public void SecondaryWindowsHaveAnExactNonResizableSize()
         {
             OnSta(() =>
                   {
                       using MainForm main = TestApplication.CreateMainForm(Settings(3));
                       using ProfilesForm manager = new ProfilesForm(Settings(3).Profiles);
                       using PublicSignInForm signIn = TestApplication.CreateSignInForm("fake-client.exe");
-                      foreach (BrandedForm form in new BrandedForm[] { main, manager, signIn })
+                      foreach (BrandedForm form in new BrandedForm[] { manager, signIn })
                       {
                           form.Show();
                           Application.DoEvents();

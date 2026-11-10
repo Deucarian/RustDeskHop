@@ -8,7 +8,7 @@ namespace RustDeskHop.UI.Controls
         public string AccessibleIdentity => $"{Name}, RustDesk ID {ComputerIdentityPainter.DisplayId(RustDeskId)}";
     }
 
-    internal sealed partial class ComputerGrid : DataGridView, IUiScaleAware
+    internal sealed partial class ComputerGrid : PointerFocusGrid, IUiScaleAware
     {
         #region Constants and Fields
         private bool _sizingRows;

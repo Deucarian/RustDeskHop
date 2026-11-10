@@ -23,8 +23,10 @@ namespace RustDeskHop.UI
         internal MainForm(ISettingsStore settingsStore,
                           IConnectionWorkflow connections,
                           Func<IWin32Window, IConnectionInteraction> createInteraction,
-                          AppSettings? initialSettings = null)
+                          AppSettings? initialSettings = null,
+                          IWindowPlacementStore? windowPlacementStore = null)
         {
+            _windowPlacementStore = windowPlacementStore;
             _settingsStore = settingsStore;
             _connections = connections;
             _createInteraction = createInteraction;
@@ -32,6 +34,8 @@ namespace RustDeskHop.UI
             _settings = initialSettings!;
             Text = "RustDeskHop";
             StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.Sizable;
+            MaximizeBox = true;
             MinimumSize = new Size(740, 320);
             ClientSize = new Size(900, 300);
             BuildUi();
