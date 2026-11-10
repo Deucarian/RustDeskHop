@@ -2,6 +2,13 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.10 minimize and taskbar behavior (2026-11-10)
+
+- Minimize now leaves the window visible to Windows and represented in the taskbar. It does not hide the window to the notification area.
+- Close (X) continues hiding to the tray, and tray Exit continues closing the companion without stopping RustDesk.
+- Tray lifecycle regressions cover normal and maximized windows: minimizing retains the visible/taskbar window and restores the previous state; Close hides and reopens the same window with the previous state. Existing exit, modal-editor, close-veto and shutdown tests remain.
+- Window-size persistence and F11/Escape fullscreen are unchanged. Existing manual-validation and branding limitations remain.
+
 ## v0.1.1-beta.9 native window controls (2026-11-10)
 
 - Removed the dedicated fullscreen button from the dashboard. Native Windows caption controls remain responsible for minimizing, maximizing and restoring the window; optional fullscreen remains available through F11 and Escape.
