@@ -105,7 +105,7 @@ Each computer row has its own **Test** and **Remove** actions. **+ Add computer*
 
 ### System tray
 
-Closing or minimizing the main window keeps RustDeskHop available in the Windows notification area. Click its tray icon (or right-click and choose **Open RustDeskHop**) to reopen it. Launching the application again also restores the existing window instead of creating a second tray icon. If Windows places it in the hidden-icons overflow, look under the **^** arrow beside the clock.
+Minimizing the main window keeps it in the Windows taskbar, where you can click it to restore it. Closing the main window with **X** hides it to the Windows notification area while RustDeskHop stays running. Click its tray icon (or right-click and choose **Open RustDeskHop**) to reopen it. Launching the application again also restores the existing window instead of creating a second tray icon. If Windows places it in the hidden-icons overflow, look under the **^** arrow beside the clock.
 
 To quit completely, right-click the tray icon and choose **Exit**. Finish or cancel any open editor/confirmation first. Exiting RustDeskHop does not stop RustDesk or disconnect its sessions. Windows shutdown and sign-out still close the companion normally.
 

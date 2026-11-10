@@ -7,14 +7,17 @@ namespace RustDeskHop.Tests
     public sealed class TrayControllerTests
     {
         #region Test Methods
-        [Fact]
-        public void CloseHidesAndOpenRestoresTheSameWindow()
+        [Theory]
+        [InlineData(FormWindowState.Normal)]
+        [InlineData(FormWindowState.Maximized)]
+        public void CloseHidesAndOpenRestoresTheSameWindow(FormWindowState state)
         {
             OnSta(() =>
                   {
                       using Form window = new Form();
                       using TrayController tray = new TrayController(window, showNotifications: false);
                       window.Show();
+                      window.WindowState = state;
                       nint handle = window.Handle;
                       Assert.True(tray.NotificationIcon.Visible);
                       Assert.Same(AppBranding.Icon, tray.NotificationIcon.Icon);
@@ -25,7 +28,7 @@ namespace RustDeskHop.Tests
                       tray.Menu.Items[0].PerformClick();
                       Assert.True(window.Visible);
                       Assert.Equal(handle, window.Handle);
-                      Assert.Equal(FormWindowState.Normal, window.WindowState);
+                      Assert.Equal(state, window.WindowState);
                   }
                  );
         }
@@ -33,7 +36,7 @@ namespace RustDeskHop.Tests
         [Theory]
         [InlineData(FormWindowState.Normal)]
         [InlineData(FormWindowState.Maximized)]
-        public void MinimizeHidesAndRestoresPreviousState(FormWindowState state)
+        public void MinimizeKeepsTaskbarWindowAndRestoresPreviousState(FormWindowState state)
         {
             OnSta(() =>
                   {
@@ -41,11 +44,17 @@ namespace RustDeskHop.Tests
                       using TrayController tray = new TrayController(window, showNotifications: false);
                       window.Show();
                       window.WindowState = state;
+                      nint handle = window.Handle;
                       window.WindowState = FormWindowState.Minimized;
-                      Assert.False(window.Visible);
+                      Assert.True(window.Visible);
+                      Assert.True(window.ShowInTaskbar);
+                      Assert.Equal(FormWindowState.Minimized, window.WindowState);
+                      Assert.True(tray.NotificationIcon.Visible);
+                      Assert.False(window.IsDisposed);
                       tray.OpenWindow();
                       Assert.True(window.Visible);
                       Assert.Equal(state, window.WindowState);
+                      Assert.Equal(handle, window.Handle);
                   }
                  );
         }
