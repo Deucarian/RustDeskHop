@@ -49,6 +49,18 @@ namespace RustDeskHop.UI.Controls
             buffer.Render(e.Graphics);
         }
 
+        protected override void WndProc(ref Message message)
+        {
+            if (message.Msg is 0x0201 or 0x0204 && !ContainsFocus)
+            {
+                int top = TopIndex;
+                Focus();
+                if (top >= 0 && top < Items.Count)
+                    TopIndex = top;
+            }
+            base.WndProc(ref message);
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);

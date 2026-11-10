@@ -23,6 +23,10 @@ namespace RustDeskHop.UI
             Accent = true,
             TabIndex = 1
         };
+        private readonly ModernButton _fullscreenButton = new ModernButton
+        {
+            Name = "Fullscreen", Text = "Fullscreen (F11)", TabIndex = 2
+        };
         private readonly Label _emptyState =
             AppTheme.Label("No computers yet\nAdd one in Manage computers & networks.", color: AppTheme.muted);
         #endregion
@@ -38,7 +42,7 @@ namespace RustDeskHop.UI
             _emptyState.TextAlign = ContentAlignment.MiddleCenter;
             _emptyState.Visible = false;
             card.Controls.AddRange([_targetsGrid, _emptyState]);
-            WindowContent.Controls.AddRange([card, _profilesButton]);
+            WindowContent.Controls.AddRange([card, _profilesButton, _fullscreenButton]);
             bool layingOut = false;
             WindowContent.Layout += (_, _) =>
             {
@@ -51,9 +55,7 @@ namespace RustDeskHop.UI
                     int Px(int value) => (int)Math.Round(value * UiScale.Factor(this));
                     int margin = Px(UiMetrics.PAGE_INSET);
                     int width = Math.Max(1,
-                                         Math.Min(Px(UiMetrics.CONTENT_WIDTH),
-                                                  WindowContent.ClientSize.Width - 2 * margin
-                                                 )
+                                         WindowContent.ClientSize.Width - 2 * margin
                                         );
                     int left = (WindowContent.ClientSize.Width - width) / 2;
                     Size manageSize = _profilesButton.GetPreferredSize(Size.Empty);
@@ -63,6 +65,8 @@ namespace RustDeskHop.UI
                                               manageSize.Width,
                                               manageSize.Height
                                              );
+                    Size fullscreenSize = _fullscreenButton.GetPreferredSize(Size.Empty);
+                    _fullscreenButton.SetBounds(left, footerTop, fullscreenSize.Width, manageSize.Height);
                     int cardTop = margin;
                     int edge = Px(4);
                     int gridHeight = Math.Max(1, footerTop - Px(UiMetrics.FOOTER_GAP) - cardTop - 2 * edge);
@@ -77,6 +81,7 @@ namespace RustDeskHop.UI
             };
             _targetsGrid.ContentHeightChanged += (_, _) => WindowContent.PerformLayout();
             _targetsGrid.ConnectRequested += async (_, e) => await ConnectRowAsync(e.RowIndex);
+            _fullscreenButton.Click += (_, _) => ToggleFullscreen();
             _profilesButton.Click += (_, _) => ManageProfiles();
         }
         #endregion

@@ -11,6 +11,7 @@ namespace RustDeskHop.UI.Theme
         private bool _ownsScaleState = true;
         private UiScaleLayout? _scaleLayout;
         private SizeF _logicalClientSize;
+        private SizeF _minimumLogicalClientSize;
         private bool _applyingScale;
         #endregion
 
@@ -70,11 +71,23 @@ namespace RustDeskHop.UI.Theme
 
             float dpi = DeviceDpi / 96F;
             _logicalClientSize = new SizeF(ClientSize.Width / dpi, ClientSize.Height / dpi);
+            _minimumLogicalClientSize = _logicalClientSize;
             _scaleLayout = new UiScaleLayout(WindowContent);
             if (_ownsScaleState)
                 _scaleState.SetPercent(UiScaleState.DEFAULT_PERCENT);
             _scaleState.Changed += OnUiScaleChanged;
             ApplyUiScale();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            if (_scaleLayout is not null && !_applyingScale
+                && FormBorderStyle == FormBorderStyle.Sizable && WindowState == FormWindowState.Normal)
+            {
+                float factor = UiScale.Factor(this);
+                _logicalClientSize = new SizeF(ClientSize.Width / factor, ClientSize.Height / factor);
+            }
         }
 
         protected override void OnDpiChanged(DpiChangedEventArgs e)
@@ -114,8 +127,11 @@ namespace RustDeskHop.UI.Theme
                                      );
                 _scaleLayout.Apply();
                 WindowContent.PerformLayout();
-                MinimumSize = Size;
-                MaximumSize = Size;
+                MinimumSize = SizeFromClientSize(new Size((int)Math.Round(_minimumLogicalClientSize.Width * factor),
+                                                          (int)Math.Round(_minimumLogicalClientSize.Height * factor)
+                                                         )
+                                                );
+                MaximumSize = FormBorderStyle == FormBorderStyle.Sizable ? Size.Empty : Size;
             }
             finally
             {

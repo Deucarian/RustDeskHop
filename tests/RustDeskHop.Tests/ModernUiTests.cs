@@ -147,7 +147,7 @@ namespace RustDeskHop.Tests
                               int minimum = UiScale.Pixels(form, UiMetrics.COMPUTER_ROW_HEIGHT);
                               Assert.InRange(grid.Rows[0].Height, minimum, minimum + 4);
                               Assert.Equal(3, grid.Rows.Count);
-                              Assert.True(Find<SurfacePanel>(form, "ComputersCard").Width <= UiMetrics.CONTENT_WIDTH);
+                              Assert.True(Find<SurfacePanel>(form, "ComputersCard").Width < form.ClientSize.Width);
                               Assert.True(grid.Height >= UiMetrics.COMPUTER_ROW_HEIGHT);
                           }
                       }
@@ -187,7 +187,7 @@ namespace RustDeskHop.Tests
                   {
                       using MainForm form = TestApplication.CreateMainForm(Settings(3));
                       Load(form);
-                      ModernButton toolbar = Assert.Single(Descendants(form).OfType<ModernButton>());
+                      ModernButton toolbar = Find<ModernButton>(form, "ManageNetworks");
                       Assert.Equal("ManageNetworks", toolbar.Name);
                       Assert.False(toolbar.Quiet);
                       Assert.False(toolbar.Primary);
@@ -381,6 +381,7 @@ namespace RustDeskHop.Tests
                       Load(dashboard);
                       Assert.Equal(new[]
                                    {
+                                       "Fullscreen",
                                        "ManageNetworks"
                                    },
                                    Descendants(dashboard).OfType<ModernButton>().Select(b => b.Name).Order().ToArray()

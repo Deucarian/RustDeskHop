@@ -2,7 +2,7 @@ using RustDeskHop.UI.Theme;
 
 namespace RustDeskHop.UI.Controls
 {
-    internal sealed class RowActionGrid : DataGridView
+    internal sealed class RowActionGrid : PointerFocusGrid
     {
         #region Constants and Fields
         private readonly GridInteractionMotion _motion;

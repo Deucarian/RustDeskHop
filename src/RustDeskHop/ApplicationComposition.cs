@@ -28,7 +28,10 @@ namespace RustDeskHop
                                                                                     rustDesk
                                                                                )
                                                                           ),
-                                initialSettings
+                                initialSettings,
+                                initialSettings is null
+                                    ? new WindowPlacementStore(Path.Combine(ConfigStore.DirectoryPath, "window.json"))
+                                    : null
                                );
         }
         #endregion
