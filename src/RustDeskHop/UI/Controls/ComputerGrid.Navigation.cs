@@ -17,7 +17,8 @@ namespace RustDeskHop.UI.Controls
         {
             base.OnEnter(e);
             _keyboardNavigation = ShowFocusCues;
-            FocusConnect((ModifierKeys & Keys.Shift) != 0 ? Rows.Count - 1 : 0);
+            if (!IsPointerFocus)
+                FocusConnect((ModifierKeys & Keys.Shift) != 0 ? Rows.Count - 1 : 0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
