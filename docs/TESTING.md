@@ -2,6 +2,12 @@
 
 Automated checks are evidence for specific behaviors, not a substitute for a human connection test or a clean consumer Windows installation.
 
+## v0.1.1-beta.9 native window controls (2026-11-10)
+
+- Removed the dedicated fullscreen button from the dashboard. Native Windows caption controls remain responsible for minimizing, maximizing and restoring the window; optional fullscreen remains available through F11 and Escape.
+- Existing dashboard action checks require only the management button. Fullscreen and placement regressions now exercise F11 directly, including normal/maximized restoration and persistence across shutdown while fullscreen.
+- Refreshed the fictional-data dashboard preview to match the simplified footer. The beta.8 window-size and maximized-state persistence behavior is retained.
+
 ## v0.1.1-beta.8 scrolling, resizing and window preferences (2026-11-10)
 
 - The dashboard can resize and maximize. Its computer list uses the available width and height. The original compact dimensions remain the first-launch default and minimum size.

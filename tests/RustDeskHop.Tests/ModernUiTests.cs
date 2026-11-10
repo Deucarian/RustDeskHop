@@ -381,7 +381,6 @@ namespace RustDeskHop.Tests
                       Load(dashboard);
                       Assert.Equal(new[]
                                    {
-                                       "Fullscreen",
                                        "ManageNetworks"
                                    },
                                    Descendants(dashboard).OfType<ModernButton>().Select(b => b.Name).Order().ToArray()
